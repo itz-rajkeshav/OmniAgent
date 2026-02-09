@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  agent-core:
+    build: ./agent-core
+    container_name: agent-core
+    ports:
+      - "8000:8000"
+    # restart: unless-stopped
+    volumes:
+      - ./agent-core:/app
+      - /app/.venv
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  gateways:
+    build: ./gateways
+    container_name: gateways
+    ports:
+      - "3000:3000"
+    depends_on:
+      - agent-core
+    environment:
+      - AGENT_URL=http://agent-core:8000
+    volumes:
+      - ./gateways:/app
+      - /app/node_modules
+    # restart: unless-stopped
+    command: npm run dev

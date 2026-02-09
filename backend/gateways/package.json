@@ -4,6 +4,7 @@
     "nodemon": "^3.1.11"
   },
   "scripts": {
-    "start": "nodemon main.js"
+    "start": "nodemon main.js",
+    "dev": "nodemon main.js"
   }
 }
