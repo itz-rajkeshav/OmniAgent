@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from knowledge_based.website.routes.route import router as website_router
 
 app = FastAPI()
 
@@ -13,5 +14,7 @@ app.add_middleware(
 )
 
 @app.get("/")
-def main():
-    return {"mesage":"yep agent-core server running boi :)"}
+def read_root():
+    return {"message": "yep agent-core server running boi :)"}
+
+app.include_router(website_router, prefix="/website")
