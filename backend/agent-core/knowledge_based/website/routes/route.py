@@ -13,8 +13,8 @@ class CrawlRequest(BaseModel):
     url: str
     max_pages: int = 5
 
-
-@router.post("/embedding/upsert")
+# later convert the route into the /embedding/upsert
+@router.post("/embedding")
 async def embed_website(request: WebsiteEmbedRequest):
     website_text = ""
     try:
