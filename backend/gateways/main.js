@@ -1,9 +1,7 @@
 import express from "express";
-import { connectWhatsapp } from "./whatshapp/service/socket.js";
 import whatshappRoutes from "./whatshapp/routes/route.js";
 
 const app = express();
-connectWhatsapp();
 
 app.get("/", (req, res) => {
   res.send("hey the gateway server is running boi :)");
