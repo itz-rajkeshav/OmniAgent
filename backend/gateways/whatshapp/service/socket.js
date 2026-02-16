@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { syncHistory } from "./historySync.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_BASE = path.join(__dirname, "..", "auth_info");
@@ -82,6 +83,7 @@ export async function connectWhatsapp(userId) {
       cur.qr = null;
       cur.status = "connected";
       console.log(`[${userId}] Connected`);
+      syncHistory(sock, userId);
     }
 
     if (connection === "close") {
