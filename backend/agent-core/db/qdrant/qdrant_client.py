@@ -145,6 +145,17 @@ def upsert_embedding(user_id: str, source_id: str, source_title: str, chunks: li
         }
 
 
+def ensure_payload_indexes():
+    try:
+        client.create_payload_index(collection_name, "user_id", field_schema="keyword")
+    except Exception:
+        pass
+    try:
+        client.create_payload_index(collection_name, "source_id", field_schema="keyword")
+    except Exception:
+        pass
+
+
 def check_if_file_exists(user_id: str, source_id: str):
     try:
         collections = client.get_collections().collections
@@ -153,6 +164,7 @@ def check_if_file_exists(user_id: str, source_id: str):
         if collection_name not in collection_names:
             return False
 
+        ensure_payload_indexes()
         results = client.scroll(
             collection_name=collection_name,
             scroll_filter=Filter(
