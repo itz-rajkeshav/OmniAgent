@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { syncHistory } from "./historySync.js";
+import { messageHandler } from "./message.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_BASE = path.join(__dirname, "..", "auth_info");
@@ -84,6 +85,7 @@ export async function connectWhatsapp(userId) {
       cur.status = "connected";
       console.log(`[${userId}] Connected`);
       syncHistory(sock, userId);
+      messageHandler(sock, userId);
     }
 
     if (connection === "close") {
