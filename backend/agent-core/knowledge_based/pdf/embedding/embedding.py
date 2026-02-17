@@ -1,7 +1,7 @@
 import io
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
-
+import hashlib
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
@@ -36,11 +36,12 @@ def embed_pdf(pdf_bytes: bytes):
     for chunk in chunks:
         embedding = model.encode(chunk)
         embeddings.append(embedding.tolist())
-
+    pdf_id=hashlib.sha256(pdf_bytes).hexdigest()[:6]
     return {
         "status":"success",
         "message":"PDF embedded successfully",
         "chunks":chunks,
         "embeddings":embeddings,
+        "pdf_id":pdf_id,
         "total_chunks":len(chunks),
     }
