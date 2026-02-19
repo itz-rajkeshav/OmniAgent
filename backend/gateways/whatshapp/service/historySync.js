@@ -1,48 +1,42 @@
+import pino from "pino";
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || "info",
+});
+
 export function syncHistory(sock, userId) {
   if (!sock?.ev) return;
 
-  sock.ev.on(
-    "messaging-history.set",
-    ({
-      chats: newChats,
-      contacts: newContacts,
-      messages: newMessages,
-      syncType,
-    }) => {
-      console.log(
-        `[${userId}] History sync: chats=${newChats?.length ?? 0}, contacts=${newContacts?.length ?? 0}, messages=${newMessages?.length ?? 0}, syncType=${syncType}`,
+  sock.ev.on("messaging-history.set", ({ messages, isLatest }) => {
+    logger.info(
+      { userId, event: "messaging-history.set" },
+      "History sync started",
+    );
+
+    if (!Array.isArray(messages)) return;
+
+    for (const msg of messages) {
+      if (!msg?.key) continue;
+
+      const jid = msg.key.remoteJid;
+      const fromMe = msg.key.fromMe;
+      const timestamp = msg.messageTimestamp;
+
+      const text =
+        msg.message?.conversation ||
+        msg.message?.extendedTextMessage?.text ||
+        null;
+
+      if (!text) continue;
+
+      logger.info(
+        { userId, jid, fromMe, text, timestamp },
+        "New message from history",
       );
+    }
 
-      if (!Array.isArray(newMessages)) return;
-
-      for (const item of newMessages) {
-        const msg = item?.message;
-        if (!msg?.key) continue;
-
-        const jid = msg.key.remoteJid;
-        const fromMe = msg.key.fromMe;
-        const timestamp = msg.key.timestamp;
-
-        const text =
-          msg.message?.conversation ||
-          msg.message?.extendedTextMessage?.text ||
-          null;
-
-        if (!text) continue;
-
-        console.log(`[${userId}] HISTORY:`, {
-          jid,
-          fromMe,
-          text,
-          timestamp,
-        });
-      }
-
-      if (syncType !== undefined) {
-        console.log(
-          `[${userId}] History sync batch completed (syncType=${syncType})`,
-        );
-      }
-    },
-  );
+    if (isLatest !== undefined) {
+      logger.info({ userId, isLatest }, `History sync completed`);
+    }
+  });
 }
