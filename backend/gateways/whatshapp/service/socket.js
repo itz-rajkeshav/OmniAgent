@@ -1,8 +1,8 @@
 import makeWASocket, {
   makeCacheableSignalKeyStore,
   DisconnectReason,
-} from "baileys";
-import { useMultiFileAuthState } from "baileys";
+} from "@whiskeysockets/baileys";
+import { useMultiFileAuthState } from "@whiskeysockets/baileys";
 import QRCode from "qrcode";
 import path from "path";
 import fs from "fs";
@@ -11,19 +11,21 @@ import P from "pino";
 import { syncHistory } from "./historySync.js";
 import { messageHandler } from "./message.js";
 
+const LOG_LEVEL = process.env.WA_LOG_LEVEL || "info";
+
 const logger = P({
-  level: "trace",
+  level: LOG_LEVEL,
   transport: {
     targets: [
       {
         target: "pino-pretty",
         options: { colorize: true },
-        level: "trace",
+        level: LOG_LEVEL,
       },
       {
         target: "pino/file",
         options: { destination: "./wa-logs.txt" },
-        level: "trace",
+        level: LOG_LEVEL,
       },
     ],
   },
@@ -32,8 +34,6 @@ const logger = P({
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_BASE = path.join(__dirname, "..", "auth_info");
 
-// Session storage: Map<userId, SessionObject>
-// SessionObject: { sock, qr, status, initialized }
 const sessions = new Map();
 
 function authDir(userId) {
@@ -70,18 +70,14 @@ export async function connectWhatsapp(userId) {
   if (!userId) throw new Error("userId is required");
 
   const existing = sessions.get(userId);
-
   if (existing) {
-    if (
-      existing.status === "connected" ||
-      existing.status === "connecting" ||
-      existing.status === "qr_ready"
-    ) {
+    if (["connected", "connecting", "qr_ready"].includes(existing.status)) {
       logger.info(
-        `[${userId}] Already in state: ${existing.status}, reusing socket`,
+        `[${userId}] Reusing existing session (status: ${existing.status})`,
       );
       return existing.sock;
     }
+    logger.info(`[${userId}] Cleaning up stale session...`);
     cleanup(userId);
   }
 
@@ -94,7 +90,8 @@ export async function connectWhatsapp(userId) {
 
   const { state, saveCreds } = await useMultiFileAuthState(dir);
 
-  // Create socket
+  const sessionUserId = userId;
+
   const sock = makeWASocket({
     auth: {
       creds: state.creds,
@@ -102,179 +99,175 @@ export async function connectWhatsapp(userId) {
     },
     printQRInTerminal: false,
     logger,
-    browser: ["WhatsApp Gateway", "Chrome", "1.0.0"],
+    browser: ["Omni Agent", "Chrome", "1.0.0"],
     defaultQueryTimeoutMs: undefined,
   });
 
-  sessions.set(userId, {
+  sessions.set(sessionUserId, {
     sock,
     qr: null,
     status: "connecting",
     initialized: false,
+    qrTimestamp: null,
   });
 
-  logger.info(`[${userId}] Session registered, waiting for connection...`);
+  logger.info(`[${sessionUserId}] Session registered`);
 
-  sock.ev.process(async (events) => {
-    const cur = sessions.get(userId);
-
-    if (!cur || cur.sock !== sock) {
-      logger.warn(`[${userId}] Event received for stale socket, ignoring`);
+  sock.ev.on("connection.update", async (update) => {
+    const session = sessions.get(sessionUserId);
+    if (!session || session.sock !== sock) {
+      logger.warn(`[${sessionUserId}] Ignoring stale connection.update event`);
       return;
     }
 
-    if (events["connection.update"]) {
-      const { connection, qr, lastDisconnect } = events["connection.update"];
+    const { connection, lastDisconnect, qr } = update;
 
-      if (qr) {
-        try {
-          cur.qr = await QRCode.toDataURL(qr);
-          cur.status = "qr_ready";
-          logger.info(`[${userId}] ✅ QR Code generated and ready`);
-        } catch (error) {
-          logger.error(`[${userId}] QR generation error: ${error.message}`);
-        }
-      }
-
-      // Connection Opened
-      if (connection === "open") {
-        cur.qr = null;
-        cur.status = "connected";
-        logger.info(`[${userId}] ✅✅ WhatsApp Connected Successfully!`);
-
-        // ✅ Only attach message handlers ONCE per connection
-        if (!cur.initialized) {
-          cur.initialized = true;
-          logger.info(`[${userId}] Initializing message handlers...`);
-
-          try {
-            syncHistory(sock, userId);
-            messageHandler(sock, userId);
-            logger.info(`[${userId}] Message handlers initialized`);
-          } catch (error) {
-            logger.error(
-              `[${userId}] Handler initialization error: ${error.message}`,
-            );
-          }
-        }
-      }
-
-      // Connection Closed
-      if (connection === "close") {
-        const statusCode = lastDisconnect?.error?.output?.statusCode;
-        const reason =
-          lastDisconnect?.error?.output?.payload?.error || "Unknown";
-        const loggedOut = statusCode === DisconnectReason.loggedOut;
-
-        logger.warn(
-          `[${userId}] ❌ Connection closed. Reason: ${reason}, Code: ${statusCode}, LoggedOut: ${loggedOut}`,
-        );
-
-        cleanup(userId);
-
-        if (loggedOut) {
-          clearAuth(userId);
-          logger.fatal(
-            `[${userId}] 🚫 User logged out. Auth cleared. Must re-scan QR.`,
-          );
-        } else {
-          logger.info(`[${userId}] 🔄 Reconnecting in 3 seconds...`);
-          setTimeout(() => connectWhatsapp(userId), 3000);
-        }
-      }
-    }
-
-    if (events["creds.update"]) {
+    if (qr) {
       try {
-        await saveCreds();
-        logger.debug(`[${userId}] Credentials saved`);
+        const qrDataUrl = await QRCode.toDataURL(qr);
+        session.qr = qrDataUrl;
+        session.status = "qr_ready";
+        session.qrTimestamp = Date.now();
+        logger.info(
+          `[${sessionUserId}] ✅ QR code generated (expires in ~20s)`,
+        );
       } catch (error) {
         logger.error(
-          `[${userId}] Failed to save credentials: ${error.message}`,
+          `[${sessionUserId}] QR generation failed: ${error.message}`,
         );
+      }
+      return;
+    }
+
+    if (connection === "open") {
+      session.qr = null;
+      session.status = "connected";
+      session.qrTimestamp = null;
+      logger.info(`[${sessionUserId}] ✅✅ WhatsApp CONNECTED!`);
+
+      if (!session.initialized) {
+        session.initialized = true;
+        logger.info(`[${sessionUserId}] Initializing message handlers...`);
+        try {
+          syncHistory(sock, sessionUserId);
+          messageHandler(sock, sessionUserId);
+          logger.info(`[${sessionUserId}] Handlers initialized`);
+        } catch (error) {
+          logger.error(
+            `[${sessionUserId}] Handler init failed: ${error.message}`,
+          );
+        }
+      }
+      return;
+    }
+
+    if (connection === "close") {
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const reason = lastDisconnect?.error?.output?.payload?.error || "Unknown";
+      const loggedOut = statusCode === DisconnectReason.loggedOut;
+
+      logger.warn(
+        `[${sessionUserId}] ❌ Disconnected (reason: ${reason}, code: ${statusCode})`,
+      );
+
+      cleanup(sessionUserId);
+
+      if (loggedOut) {
+        clearAuth(sessionUserId);
+        logger.fatal(
+          `[${sessionUserId}] 🚫 Logged out - auth cleared. Requires re-scan.`,
+        );
+      } else {
+        logger.info(`[${sessionUserId}] 🔄 Reconnecting in 3s...`);
+        setTimeout(() => connectWhatsapp(sessionUserId), 3000);
       }
     }
   });
+
+  sock.ev.on("creds.update", async () => {
+    try {
+      await saveCreds();
+      logger.debug(`[${sessionUserId}] Credentials saved`);
+    } catch (error) {
+      logger.error(`[${sessionUserId}] Failed to save creds: ${error.message}`);
+    }
+  });
+
+  setInterval(() => {
+    const session = sessions.get(sessionUserId);
+    if (session?.status === "qr_ready" && session.qrTimestamp) {
+      const age = Date.now() - session.qrTimestamp;
+      if (age > 18000) {
+        // QR expires after ~20s, refresh hint
+        logger.debug(
+          `[${sessionUserId}] QR is ${Math.round(age / 1000)}s old - frontend should refresh`,
+        );
+      }
+    }
+  }, 5000);
 
   return sock;
 }
 
 export function getQRCode(userId) {
-  const qr = sessions.get(userId)?.qr ?? null;
-  if (qr) {
-    logger.debug(`[${userId}] QR code requested`);
-  } else {
-    logger.debug(`[${userId}] No QR code available`);
+  const session = sessions.get(userId);
+  if (!session || session.status !== "qr_ready") {
+    logger.debug(
+      `[${userId}] No valid QR available (status: ${session?.status || "none"})`,
+    );
+    return null;
   }
-  return qr;
+  logger.debug(`[${userId}] Returning QR code`);
+  return session.qr;
 }
 
 export function getUserStatus(userId) {
-  const status = sessions.get(userId)?.status ?? "disconnected";
-  logger.debug(`[${userId}] Status: ${status}`);
-  return status;
+  return sessions.get(userId)?.status || "disconnected";
 }
 
 export async function disconnectUser(userId) {
-  logger.info(`[${userId}] Disconnecting user...`);
-
-  const s = sessions.get(userId);
-  if (s?.sock) {
+  logger.info(`[${userId}] Disconnecting...`);
+  const session = sessions.get(userId);
+  if (session?.sock) {
     try {
-      await s.sock.logout();
+      await session.sock.logout();
       logger.info(`[${userId}] Logout successful`);
     } catch (e) {
       logger.warn(`[${userId}] Logout error: ${e.message}`);
     }
   }
-
   cleanup(userId);
   clearAuth(userId);
-  logger.info(`[${userId}] ✅ User disconnected and cleaned up`);
+  logger.info(`[${userId}] ✅ Disconnected and cleaned up`);
 }
 
 export function getAllSessions() {
-  const out = {};
-  for (const [id, s] of sessions) {
-    out[id] = s.status;
+  const result = {};
+  for (const [id, session] of sessions) {
+    result[id] = session.status;
   }
-  logger.debug(`Active sessions: ${Object.keys(out).length}`);
-  return out;
+  return result;
 }
 
 export function getSocket(userId) {
-  return sessions.get(userId)?.sock ?? null;
+  return sessions.get(userId)?.sock || null;
 }
 
 export function isUserConnected(userId) {
   return sessions.get(userId)?.status === "connected";
 }
 
-process.on("SIGINT", async () => {
-  logger.info("🛑 Shutting down gracefully...");
-
-  for (const [userId] of sessions) {
-    try {
-      await disconnectUser(userId);
-    } catch (e) {
-      logger.error(`Failed to disconnect ${userId}: ${e.message}`);
-    }
+async function shutdown() {
+  logger.info("🛑 Shutting down WhatsApp sessions...");
+  const userIds = Array.from(sessions.keys());
+  for (const userId of userIds) {
+    await disconnectUser(userId).catch((e) =>
+      logger.error(`Failed to disconnect ${userId}: ${e.message}`),
+    );
   }
-
   logger.info("✅ All sessions closed");
   process.exit(0);
-});
+}
 
-process.on("SIGTERM", async () => {
-  logger.info("🛑 SIGTERM received, shutting down...");
-
-  for (const [userId] of sessions) {
-    try {
-      await disconnectUser(userId);
-    } catch (e) {
-      logger.error(`Failed to disconnect ${userId}: ${e.message}`);
-    }
-  }
-
-  process.exit(0);
-});
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

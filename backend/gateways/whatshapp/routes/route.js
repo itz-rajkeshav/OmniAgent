@@ -15,12 +15,38 @@ function getUserId(req) {
   );
 }
 
+function waitForQR(userId, maxWaitMs = 4500, intervalMs = 300) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      const status = getUserStatus(userId);
+      const qr = getQRCode(userId);
+      if (status === "connected" || qr) {
+        return resolve({ status, qr });
+      }
+      if (Date.now() - start >= maxWaitMs) {
+        return resolve({ status, qr: null });
+      }
+      setTimeout(tick, intervalMs);
+    };
+    tick();
+  });
+}
+
 async function getSessionAndQR(userId) {
   const status = getUserStatus(userId);
   if (status === "disconnected") {
     await connectWhatsapp(userId);
   }
-  return { status: getUserStatus(userId), qr: getQRCode(userId) };
+  let statusNow = getUserStatus(userId);
+  let qr = getQRCode(userId);
+  // If we just started connecting, give the library a short time to emit the first QR
+  if (statusNow === "connecting" && !qr) {
+    const result = await waitForQR(userId);
+    statusNow = result.status;
+    qr = result.qr;
+  }
+  return { status: statusNow, qr };
 }
 
 router.get(["/qr", "/qr/:userId"], async (req, res) => {
@@ -50,7 +76,6 @@ router.get(["/qr", "/qr/:userId"], async (req, res) => {
   });
 });
 
-// --- Scan (HTML page for browser) ---
 // router.get(["/scan", "/scan/:userId"], async (req, res) => {
 //   const userId = getUserId(req);
 //   const { status, qr } = await getSessionAndQR(userId);
