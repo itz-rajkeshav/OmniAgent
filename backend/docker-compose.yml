@@ -6,6 +6,7 @@ services:
     container_name: agent-core
     ports:
       - "8000:8000"
+      - "50051:50051"
     # restart: unless-stopped
     volumes:
       - ./agent-core:/app
@@ -25,8 +26,10 @@ services:
       - agent-core
     environment:
       - AGENT_URL=http://agent-core:8000
+      - AGENT_CORE_GRPC_ADDR=agent-core:50051
     volumes:
       - ./gateways:/app
       - /app/node_modules
+      - ./proto:/app/proto
     # restart: unless-stopped
     command: npm run dev

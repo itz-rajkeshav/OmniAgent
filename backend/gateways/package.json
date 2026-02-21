@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
     "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "baileys": "^7.0.0-rc.9",
     "express": "^5.2.1",

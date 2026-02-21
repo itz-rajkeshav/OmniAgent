@@ -10,6 +10,11 @@ import { fileURLToPath } from "url";
 import P from "pino";
 import { syncHistory } from "./historySync.js";
 import { messageHandler } from "./message.js";
+import {
+  saveAccount,
+  updateAccountStatus,
+  getAccount,
+} from "../grpc/client.js";
 
 const LOG_LEVEL = process.env.WA_LOG_LEVEL || "info";
 
@@ -81,6 +86,24 @@ export async function connectWhatsapp(userId) {
     cleanup(userId);
   }
 
+  try {
+    const accountInfo = await getAccount(userId);
+    if (accountInfo?.status === "active") {
+      const current = sessions.get(userId);
+      if (current?.status === "connected") {
+        logger.info(
+          `[${userId}] Account already active in DB and socket is connected — skipping duplicate connection`,
+        );
+        return current.sock;
+      }
+      logger.info(
+        `[${userId}] Account found in DB (status: active) but no live socket — reconnecting...`,
+      );
+    }
+  } catch (err) {
+    logger.debug(`[${userId}] getAccount check skipped: ${err.message}`);
+  }
+
   logger.info(`[${userId}] Creating new WhatsApp connection...`);
 
   const dir = authDir(userId);
@@ -145,6 +168,17 @@ export async function connectWhatsapp(userId) {
       session.qrTimestamp = null;
       logger.info(`[${sessionUserId}] ✅✅ WhatsApp CONNECTED!`);
 
+      try {
+        const jid = sock.user.id;
+        const phoneNumber = jid.split(":")[0].split("@")[0];
+        const result = await saveAccount(sessionUserId, phoneNumber, jid);
+        logger.info(`[${sessionUserId}] gRPC SaveAccount: ${result.message}`);
+      } catch (err) {
+        logger.error(
+          `[${sessionUserId}] gRPC SaveAccount failed: ${err.message}`,
+        );
+      }
+
       if (!session.initialized) {
         session.initialized = true;
         logger.info(`[${sessionUserId}] Initializing message handlers...`);
@@ -177,6 +211,16 @@ export async function connectWhatsapp(userId) {
         logger.fatal(
           `[${sessionUserId}] 🚫 Logged out - auth cleared. Requires re-scan.`,
         );
+        // ── gRPC: mark account inactive in agent-core ────────
+        updateAccountStatus(sessionUserId, "inactive")
+          .then((r) =>
+            logger.info(`[${sessionUserId}] gRPC UpdateStatus: ${r.message}`),
+          )
+          .catch((err) =>
+            logger.error(
+              `[${sessionUserId}] gRPC UpdateStatus failed: ${err.message}`,
+            ),
+          );
       } else {
         logger.info(`[${sessionUserId}] 🔄 Reconnecting in 3s...`);
         setTimeout(() => connectWhatsapp(sessionUserId), 3000);

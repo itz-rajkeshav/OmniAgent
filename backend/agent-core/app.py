@@ -16,12 +16,17 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     init_db()
 
-    grpc_server = await asyncio.get_event_loop().run_in_executor(None, grpc_serve)
-    logger.info("gRPC server started alongside agent-core")
+    loop = asyncio.get_running_loop()
+    try:
+        grpc_server = await loop.run_in_executor(None, grpc_serve)
+        logger.info("gRPC server started on port 50051 alongside agent-core")
+    except Exception as e:
+        logger.exception("Failed to start gRPC server: %s", e)
+        raise
 
     yield
 
-    await asyncio.get_event_loop().run_in_executor(None, grpc_stop, grpc_server)
+    await loop.run_in_executor(None, grpc_stop, grpc_server)
     logger.info("gRPC server stopped")
 
 

@@ -46,7 +46,7 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                     return omniagent_pb2.SaveAccountResponse(
                         success=True,
                         message="Account created successfully",
-                        account=account["account"].phone_number,
+                        phone_number=account["account"].phone_number,
                         jid=account["account"].jid,
                         status=account["account"].status,
                     )
@@ -55,7 +55,7 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
             logger.error(f"[SaveAccount] error: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return omniagent_pb2.SaveAccountResponse(success=False, message=str(e), account=None, phone_number=None, jid=None, status=None)
+            return omniagent_pb2.SaveAccountResponse(success=False, message=str(e), phone_number="", jid="", status="")
 
     def UpdateAccountStatus(self, request: omniagent_pb2.UpdateStatusRequest, context):
         logger.info(f"[UpdateAccountStatus] user_id={request.user_id} status={request.status}")
@@ -70,16 +70,15 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                     return omniagent_pb2.UpdateStatusResponse(
                         success=True,
                         message=f"Status updated to {request.status}",
-                        account=result["account"].phone_number,
+                        phone_number=result["account"].phone_number,
                         jid=result["account"].jid,
                         status=result["account"].status,
                     )
                 return omniagent_pb2.UpdateStatusResponse(
                     success=False,
-                    account=None,
-                    phone_number=None,
-                    jid=None,
-                    status=None,
+                    phone_number="",
+                    jid="",
+                    status="",
                     message="Account not found",
                 )
 
@@ -87,7 +86,7 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
             logger.error(f"[UpdateAccountStatus] error: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return omniagent_pb2.UpdateStatusResponse(success=False, message=str(e), account=None, phone_number=None, jid=None, status=None)
+            return omniagent_pb2.UpdateStatusResponse(success=False, message=str(e), phone_number="", jid="", status="")
 
   
     def GetAccount(self, request: omniagent_pb2.GetAccountRequest, context):
