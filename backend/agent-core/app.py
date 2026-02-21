@@ -1,16 +1,28 @@
 from contextlib import asynccontextmanager
+import asyncio
+import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from knowledge_based.website.routes.route import router as website_router
 from db.supabase.connectDB import init_db
 from knowledge_based.pdf.router.router import router as pdf_router
+from rpc.server import serve as grpc_serve, stop as grpc_stop
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+
+    grpc_server = await asyncio.get_event_loop().run_in_executor(None, grpc_serve)
+    logger.info("gRPC server started alongside agent-core")
+
     yield
+
+    await asyncio.get_event_loop().run_in_executor(None, grpc_stop, grpc_server)
+    logger.info("gRPC server stopped")
 
 
 app = FastAPI(lifespan=lifespan)

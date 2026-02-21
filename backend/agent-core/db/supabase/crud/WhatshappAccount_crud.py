@@ -32,18 +32,24 @@ def get_whatshapp_account(db:Session, user_id:str):
         "status": "error",
         "message": "Whatshapp account not found",
     }
-def update_whatshapp_account(db:Session,user_id:str, phone_number:str, jid:str, status:str):
-    account_update = get_whatshapp_account(db, user_id)
-    if account_update:
-        account_update.updated_at = datetime.utcnow()
-        db.commit()
-        db.refresh(account_update)
+def update_whatshapp_account(db: Session, user_id: str, phone_number: str = None, jid: str = None, status: str = None):
+    account = db.query(WhatshappAccount).filter(WhatshappAccount.user_id == user_id).first()
+    if not account:
         return {
-            "status": "success",
-            "message": "Whatshapp account updated successfully",
-            "account": account_update
+            "status": "error",
+            "message": "Whatshapp account not found",
         }
+    if phone_number:
+        account.phone_number = phone_number
+    if jid:
+        account.jid = jid
+    if status:
+        account.status = status
+    account.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(account)
     return {
-        "status": "error",
-        "message": "Whatshapp account not found",
+        "status": "success",
+        "message": "Whatshapp account updated successfully",
+        "account": account
     }

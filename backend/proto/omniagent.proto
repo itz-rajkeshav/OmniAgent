@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package omniagent;
+
+
+service WhatsappService {
+  rpc SaveAccount (SaveAccountRequest) returns (SaveAccountResponse);
+
+  rpc UpdateAccountStatus (UpdateStatusRequest) returns (UpdateStatusResponse);
+
+  rpc GetAccount (GetAccountRequest) returns (GetAccountResponse);
+}
+
+message SaveAccountRequest {
+  string user_id     = 1;
+  string phone_number = 2;
+  string jid         = 3;
+}
+
+message SaveAccountResponse {
+  bool   success      = 1;
+  string message      = 2;
+  string phone_number = 3;
+  string jid          = 4;
+  string status       = 5;
+}
+
+message UpdateStatusRequest {
+  string user_id = 1;
+  string status  = 2; 
+}
+
+message UpdateStatusResponse {
+  bool   success = 1;
+  string message = 2;
+  string phone_number=3;
+  string jid =4;
+  string status =5;
+}
+
+message GetAccountRequest {
+  string user_id = 1;
+}
+
+message GetAccountResponse {
+  bool   found        = 1;
+  string user_id      = 2;
+  string phone_number = 3;
+  string jid          = 4;
+  string status       = 5;
+}
