@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..models.model import UserSource
+from ..models.userModel import UserSource
 from datetime import datetime
 
 

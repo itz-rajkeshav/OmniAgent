@@ -5,7 +5,7 @@ from uuid import uuid4
 from .connectDB import client
 from db.supabase.connectDB import get_db_session, engine
 from db.supabase.crud import upsert_user_source, delete_user_source as delete_supabase_source
-from db.supabase.models.model import UserSource
+from db.supabase.models.userModel import UserSource
 
 logger = logging.getLogger(__name__)
 
