@@ -6,8 +6,8 @@ from db.supabase.connectDB import Base
 class WhatshappAccount(Base):
     __tablename__ = "whatshapp_accounts"
 
-    id = Column(Integer , autoincrement=True)
-    user_id = Column(String, nullable=False, primary_key=True, index=True)
+    id = Column(Integer , autoincrement=True, primary_key=True)
+    user_id = Column(String, nullable=False, index=True)
     phone_number = Column(String, nullable=False, index=True, unique=True)
     jid =Column(String, nullable=False, index=True, unique=True)
     status = Column(SQLEnum("active", "inactive", name="status_enum"), nullable=False)

@@ -27,7 +27,8 @@ message SaveAccountResponse {
 
 message UpdateStatusRequest {
   string user_id = 1;
-  string status  = 2; 
+  string status  = 2;
+  string jid     = 3;
 }
 
 message UpdateStatusResponse {
@@ -39,7 +40,7 @@ message UpdateStatusResponse {
 }
 
 message GetAccountRequest {
-  string user_id = 1;
+  string phone_number = 1;
 }
 
 message GetAccountResponse {

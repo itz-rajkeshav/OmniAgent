@@ -71,7 +71,7 @@ function clearAuth(userId) {
   }
 }
 
-export async function connectWhatsapp(userId) {
+export async function connectWhatsapp(userId, phoneNumber = null) {
   if (!userId) throw new Error("userId is required");
 
   const existing = sessions.get(userId);
@@ -86,25 +86,71 @@ export async function connectWhatsapp(userId) {
     cleanup(userId);
   }
 
-  try {
-    const accountInfo = await getAccount(userId);
-    if (accountInfo?.status === "active") {
-      const current = sessions.get(userId);
-      if (current?.status === "connected") {
-        logger.info(
-          `[${userId}] Account already active in DB and socket is connected — skipping duplicate connection`,
-        );
-        return current.sock;
-      }
-      logger.info(
-        `[${userId}] Account found in DB (status: active) but no live socket — reconnecting...`,
-      );
-    }
-  } catch (err) {
-    logger.debug(`[${userId}] getAccount check skipped: ${err.message}`);
-  }
+  if (phoneNumber) {
+    try {
+      const accountInfo = await getAccount(phoneNumber);
+      if (accountInfo?.found) {
+        const existingSession = sessions.get(accountInfo.user_id);
 
-  logger.info(`[${userId}] Creating new WhatsApp connection...`);
+        if (accountInfo.user_id !== userId) {
+          // Phone number is claimed by a different userId
+          logger.warn(
+            `[${userId}] ⚠️ Phone already registered to user ${accountInfo.user_id} ` +
+              `(status: ${accountInfo.status}).`,
+          );
+
+          if (
+            existingSession?.sock &&
+            ["connected", "connecting", "qr_ready"].includes(
+              existingSession.status,
+            )
+          ) {
+            logger.info(
+              `[${userId}] Reusing in-memory session of ${accountInfo.user_id} (status: ${existingSession.status})`,
+            );
+            return {
+              sock: existingSession.sock,
+              message:
+                "Already connected. Log out from the previous device first to reconnect from a new one.",
+              alreadyConnected: true,
+            };
+          }
+          logger.info(
+            `[${userId}] No live session found for previous owner, creating new session...`,
+          );
+        } else {
+          logger.info(
+            `[${userId}] Same user reconnecting, restoring session from stored auth...`,
+          );
+
+          if (
+            existingSession?.sock &&
+            ["connected", "connecting", "qr_ready"].includes(
+              existingSession.status,
+            )
+          ) {
+            logger.info(
+              `[${userId}] Reusing in-memory session (status: ${existingSession.status})`,
+            );
+            return existingSession.sock;
+          }
+        }
+        updateAccountStatus(accountInfo.user_id, "active")
+          .then((r) =>
+            logger.info(
+              `[${accountInfo.user_id}] gRPC UpdateStatus: ${r.message}`,
+            ),
+          )
+          .catch((err) =>
+            logger.error(
+              `[${accountInfo.user_id}] gRPC UpdateStatus failed: ${err.message}`,
+            ),
+          );
+      }
+    } catch (err) {
+      logger.debug(`[${userId}] getAccount check skipped: ${err.message}`);
+    }
+  }
 
   const dir = authDir(userId);
   if (!fs.existsSync(dir)) {
@@ -169,11 +215,27 @@ export async function connectWhatsapp(userId) {
       logger.info(`[${sessionUserId}] ✅✅ WhatsApp CONNECTED!`);
 
       try {
-        const jid = sock.user.id;
-        const phoneNumber = jid.split(":")[0].split("@")[0];
-        const result = await saveAccount(sessionUserId, phoneNumber, jid);
-        logger.info(`[${sessionUserId}] gRPC SaveAccount: ${result.message}`);
+        const jid = sock.user?.id;
+        if (jid) {
+          const phoneNumber = jid.split(":")[0].split("@")[0];
+          const result = await saveAccount(sessionUserId, phoneNumber, jid);
+          if (result?.success) {
+            logger.info(
+              `[${sessionUserId}] gRPC SaveAccount: ${result.message}`,
+            );
+          } else {
+            logger.error(
+              `[${sessionUserId}] gRPC SaveAccount returned failure: ${result?.message ?? "unknown"}`,
+            );
+          }
+        } else {
+          logger.warn(
+            `[${sessionUserId}] No sock.user.id yet, skipping SaveAccount`,
+          );
+        }
       } catch (err) {
+        const code = err.code ?? err.message;
+        const details = err.details ?? err.message;
         logger.error(
           `[${sessionUserId}] gRPC SaveAccount failed: ${err.message}`,
         );
@@ -211,8 +273,8 @@ export async function connectWhatsapp(userId) {
         logger.fatal(
           `[${sessionUserId}] 🚫 Logged out - auth cleared. Requires re-scan.`,
         );
-        // ── gRPC: mark account inactive in agent-core ────────
-        updateAccountStatus(sessionUserId, "inactive")
+        const jidForLogout = sock.user?.id ?? null;
+        updateAccountStatus(sessionUserId, "inactive", jidForLogout)
           .then((r) =>
             logger.info(`[${sessionUserId}] gRPC UpdateStatus: ${r.message}`),
           )

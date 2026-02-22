@@ -19,9 +19,12 @@ def create_whatshapp_account(db:Session, user_id:str, phone_number:str, jid:str)
         "message": "Whatshapp account created successfully",
         "account": account_creation
     }
-
-def get_whatshapp_account(db:Session, user_id:str):
-    account = db.query(WhatshappAccount).filter(WhatshappAccount.user_id == user_id).first()
+def get_whatshapp_account(db: Session, phone_number: str):
+    account = (
+        db.query(WhatshappAccount)
+        .filter(WhatshappAccount.phone_number == phone_number)
+        .first()
+    )
     if account:
         return {
             "status": "success",
@@ -32,6 +35,41 @@ def get_whatshapp_account(db:Session, user_id:str):
         "status": "error",
         "message": "Whatshapp account not found",
     }
+
+
+def get_whatshapp_account_by_jid(db: Session, jid: str):
+    account = db.query(WhatshappAccount).filter(WhatshappAccount.jid == jid).first()
+    if account:
+        return {"status": "success", "message": "Whatshapp account found", "account": account}
+    return {"status": "error", "message": "Whatshapp account not found"}
+
+
+def update_whatshapp_account_by_phone(
+    db: Session, phone_number: str, user_id: str, jid: str, status: str = "active"
+):
+    account = db.query(WhatshappAccount).filter(WhatshappAccount.phone_number == phone_number).first()
+    if not account:
+        return {"status": "error", "message": "Whatshapp account not found"}
+    account.user_id = user_id
+    account.jid = jid
+    account.status = status
+    account.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(account)
+    return {"status": "success", "message": "Whatshapp account updated successfully", "account": account}
+
+
+def update_whatshapp_account_status_by_jid(db: Session, jid: str, status: str):
+    account = db.query(WhatshappAccount).filter(WhatshappAccount.jid == jid).first()
+    if not account:
+        return {"status": "error", "message": "Whatshapp account not found"}
+    account.status = status
+    account.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(account)
+    return {"status": "success", "message": "Whatshapp account updated successfully", "account": account}
+
+
 def update_whatshapp_account(db: Session, user_id: str, phone_number: str = None, jid: str = None, status: str = None):
     account = db.query(WhatshappAccount).filter(WhatshappAccount.user_id == user_id).first()
     if not account:

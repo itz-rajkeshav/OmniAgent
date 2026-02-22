@@ -43,9 +43,11 @@ export function saveAccount(userId, phoneNumber, jid) {
   });
 }
 
-export function updateAccountStatus(userId, status) {
+export function updateAccountStatus(userId, status, jid = null) {
   return new Promise((resolve, reject) => {
-    client.UpdateAccountStatus({ user_id: userId, status }, (err, response) => {
+    const payload = { user_id: userId, status };
+    if (jid) payload.jid = jid;
+    client.UpdateAccountStatus(payload, (err, response) => {
       if (err) {
         reject(err);
         return;
@@ -55,9 +57,9 @@ export function updateAccountStatus(userId, status) {
   });
 }
 
-export function getAccount(userId) {
+export function getAccount(phoneNumber) {
   return new Promise((resolve, reject) => {
-    client.GetAccount({ user_id: userId }, (err, response) => {
+    client.GetAccount({ phone_number: phoneNumber }, (err, response) => {
       if (err) {
         reject(err);
         return;
