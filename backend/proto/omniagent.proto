@@ -23,6 +23,7 @@ message SaveAccountResponse {
   string phone_number = 3;
   string jid          = 4;
   string status       = 5;
+  string agent_mode   = 6;
 }
 
 message UpdateStatusRequest {
@@ -37,6 +38,7 @@ message UpdateStatusResponse {
   string phone_number=3;
   string jid =4;
   string status =5;
+  string agent_mode =6;
 }
 
 message GetAccountRequest {
@@ -49,4 +51,19 @@ message GetAccountResponse {
   string phone_number = 3;
   string jid          = 4;
   string status       = 5;
+  string agent_mode   = 6;
+}
+
+message updateAgentModeRequest{
+  string user_id    =1;
+  string agent_mode =2;
+}
+
+message updateAgentModeResponse{
+  bool   found        = 1;
+  string user_id      = 2;
+  string phone_number = 3;
+  string jid          = 4;
+  string status       = 5;
+  string agent_mode   = 6;
 }

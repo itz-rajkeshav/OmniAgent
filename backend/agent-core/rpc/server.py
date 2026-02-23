@@ -9,6 +9,7 @@ from db.supabase.crud.WhatshappAccount_crud import (
     update_whatshapp_account,
     update_whatshapp_account_by_phone,
     update_whatshapp_account_status_by_jid,
+    update_whatshapp_account_agent_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         phone_number=account.phone_number,
                         jid=account.jid,
                         status=account.status,
+                        agent_mode=getattr(account, "agent_mode", "casual"),
                     )
                 else:
                     account = create_whatshapp_account(
@@ -47,6 +49,7 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         user_id=request.user_id,
                         phone_number=request.phone_number,
                         jid=request.jid,
+                        agent_mode="casual",  # TODO: pass from frontend when ready
                     )
                     logger.info(f"[SaveAccount] created new account for {request.user_id} phone={account['account'].phone_number} jid={account['account'].jid}")
                     return omniagent_pb2.SaveAccountResponse(
@@ -55,13 +58,14 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         phone_number=account["account"].phone_number,
                         jid=account["account"].jid,
                         status=account["account"].status,
+                        agent_mode=account["account"].agent_mode,
                     )
 
         except Exception as e:
             logger.error(f"[SaveAccount] error: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return omniagent_pb2.SaveAccountResponse(success=False, message=str(e), phone_number="", jid="", status="")
+            return omniagent_pb2.SaveAccountResponse(success=False, message=str(e), phone_number="", jid="", status="", agent_mode="")
 
     def UpdateAccountStatus(self, request: omniagent_pb2.UpdateStatusRequest, context):
         logger.info(f"[UpdateAccountStatus] user_id={request.user_id} status={request.status} jid={getattr(request, 'jid', '') or ''}")
@@ -123,6 +127,19 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
             context.set_details(str(e))
             return omniagent_pb2.GetAccountResponse(found=False)
 
+    def UpdateAgentMode(self, request: omniagent_pb2.UpdateAgentModeRequest, context):
+        logger.info(f"[UpdateAgentMode] user_id={request.user_id} agent_mode={request.agent_mode}")
+        try:
+            with get_db_session() as db:
+                result = update_whatshapp_account_agent_mode(db, request.user_id, request.agent_mode)
+                if result["status"] == "success":
+                    return omniagent_pb2.UpdateAgentModeResponse(success=True, message=f"Agent mode updated to {request.agent_mode}")
+                return omniagent_pb2.UpdateAgentModeResponse(success=False, message="Agent mode not found")
+        except Exception as e:
+            logger.error(f"[UpdateAgentMode] error: {e}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return omniagent_pb2.UpdateAgentModeResponse(success=False, message=str(e))
 
 def serve() -> grpc.Server:
     server = grpc.server(

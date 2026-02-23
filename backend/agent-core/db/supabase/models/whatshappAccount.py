@@ -11,6 +11,7 @@ class WhatshappAccount(Base):
     phone_number = Column(String, nullable=False, index=True, unique=True)
     jid =Column(String, nullable=False, index=True, unique=True)
     status = Column(SQLEnum("active", "inactive", name="status_enum"), nullable=False)
+    agent_mode = Column(SQLEnum("casual", "professional", name="agent_mode_enum"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     def __repr__(self):

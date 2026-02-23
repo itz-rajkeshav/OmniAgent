@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fomniagent.proto\x12\tomniagent\"H\n\x12SaveAccountRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"j\n\x13SaveAccountResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\"C\n\x13UpdateStatusRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"k\n\x14UpdateStatusResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\")\n\x11GetAccountRequest\x12\x14\n\x0cphone_number\x18\x01 \x01(\t\"g\n\x12GetAccountResponse\x12\r\n\x05\x66ound\x18\x01 \x01(\x08\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t2\x82\x02\n\x0fWhatsappService\x12L\n\x0bSaveAccount\x12\x1d.omniagent.SaveAccountRequest\x1a\x1e.omniagent.SaveAccountResponse\x12V\n\x13UpdateAccountStatus\x12\x1e.omniagent.UpdateStatusRequest\x1a\x1f.omniagent.UpdateStatusResponse\x12I\n\nGetAccount\x12\x1c.omniagent.GetAccountRequest\x1a\x1d.omniagent.GetAccountResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fomniagent.proto\x12\tomniagent\"H\n\x12SaveAccountRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"~\n\x13SaveAccountResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\"C\n\x13UpdateStatusRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"\x7f\n\x14UpdateStatusResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\")\n\x11GetAccountRequest\x12\x14\n\x0cphone_number\x18\x01 \x01(\t\"{\n\x12GetAccountResponse\x12\r\n\x05\x66ound\x18\x01 \x01(\x08\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\"=\n\x16updateAgentModeRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nagent_mode\x18\x02 \x01(\t\"\x80\x01\n\x17updateAgentModeResponse\x12\r\n\x05\x66ound\x18\x01 \x01(\x08\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t2\x82\x02\n\x0fWhatsappService\x12L\n\x0bSaveAccount\x12\x1d.omniagent.SaveAccountRequest\x1a\x1e.omniagent.SaveAccountResponse\x12V\n\x13UpdateAccountStatus\x12\x1e.omniagent.UpdateStatusRequest\x1a\x1f.omniagent.UpdateStatusResponse\x12I\n\nGetAccount\x12\x1c.omniagent.GetAccountRequest\x1a\x1d.omniagent.GetAccountResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,15 +34,19 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SAVEACCOUNTREQUEST']._serialized_start=30
   _globals['_SAVEACCOUNTREQUEST']._serialized_end=102
   _globals['_SAVEACCOUNTRESPONSE']._serialized_start=104
-  _globals['_SAVEACCOUNTRESPONSE']._serialized_end=210
-  _globals['_UPDATESTATUSREQUEST']._serialized_start=212
-  _globals['_UPDATESTATUSREQUEST']._serialized_end=279
-  _globals['_UPDATESTATUSRESPONSE']._serialized_start=281
-  _globals['_UPDATESTATUSRESPONSE']._serialized_end=388
-  _globals['_GETACCOUNTREQUEST']._serialized_start=390
-  _globals['_GETACCOUNTREQUEST']._serialized_end=431
-  _globals['_GETACCOUNTRESPONSE']._serialized_start=433
-  _globals['_GETACCOUNTRESPONSE']._serialized_end=536
-  _globals['_WHATSAPPSERVICE']._serialized_start=539
-  _globals['_WHATSAPPSERVICE']._serialized_end=797
+  _globals['_SAVEACCOUNTRESPONSE']._serialized_end=230
+  _globals['_UPDATESTATUSREQUEST']._serialized_start=232
+  _globals['_UPDATESTATUSREQUEST']._serialized_end=299
+  _globals['_UPDATESTATUSRESPONSE']._serialized_start=301
+  _globals['_UPDATESTATUSRESPONSE']._serialized_end=428
+  _globals['_GETACCOUNTREQUEST']._serialized_start=430
+  _globals['_GETACCOUNTREQUEST']._serialized_end=471
+  _globals['_GETACCOUNTRESPONSE']._serialized_start=473
+  _globals['_GETACCOUNTRESPONSE']._serialized_end=596
+  _globals['_UPDATEAGENTMODEREQUEST']._serialized_start=598
+  _globals['_UPDATEAGENTMODEREQUEST']._serialized_end=659
+  _globals['_UPDATEAGENTMODERESPONSE']._serialized_start=662
+  _globals['_UPDATEAGENTMODERESPONSE']._serialized_end=790
+  _globals['_WHATSAPPSERVICE']._serialized_start=793
+  _globals['_WHATSAPPSERVICE']._serialized_end=1051
 # @@protoc_insertion_point(module_scope)
