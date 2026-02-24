@@ -15,6 +15,10 @@ import {
   updateAccountStatus,
   getAccount,
 } from "../grpc/client.js";
+import {
+  deleteMessages,
+  setAgentMode,
+} from "../../db/redis/Messages.js";
 
 const LOG_LEVEL = process.env.WA_LOG_LEVEL || "info";
 
@@ -45,7 +49,7 @@ function authDir(userId) {
   return path.join(AUTH_BASE, `user_${userId}`);
 }
 
-function cleanup(userId) {
+async function cleanup(userId) {
   const s = sessions.get(userId);
   if (s?.sock) {
     try {
@@ -57,6 +61,12 @@ function cleanup(userId) {
     }
   }
   sessions.delete(userId);
+  try {
+    await deleteMessages(userId);
+    logger.info(`[${userId}] Messages cleared from Redis`);
+  } catch (e) {
+    logger.warn(`[${userId}] Redis delete messages: ${e.message}`);
+  }
 }
 
 function clearAuth(userId) {
@@ -83,7 +93,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
       return existing.sock;
     }
     logger.info(`[${userId}] Cleaning up stale session...`);
-    cleanup(userId);
+    await cleanup(userId);
   }
 
   if (phoneNumber) {
@@ -223,10 +233,16 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
             logger.info(
               `[${sessionUserId}] gRPC SaveAccount: ${result.message}`,
             );
+            const agentMode = result.agent_mode || "casual";
+            await setAgentMode(sessionUserId, agentMode);
+            logger.info(
+              `[${sessionUserId}] Agent mode set to: ${agentMode}`,
+            );
           } else {
             logger.error(
               `[${sessionUserId}] gRPC SaveAccount returned failure: ${result?.message ?? "unknown"}`,
             );
+            await setAgentMode(sessionUserId, "casual");
           }
         } else {
           logger.warn(
@@ -266,7 +282,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
         `[${sessionUserId}] ❌ Disconnected (reason: ${reason}, code: ${statusCode})`,
       );
 
-      cleanup(sessionUserId);
+      await cleanup(sessionUserId);
 
       if (loggedOut) {
         clearAuth(sessionUserId);
@@ -342,7 +358,7 @@ export async function disconnectUser(userId) {
       logger.warn(`[${userId}] Logout error: ${e.message}`);
     }
   }
-  cleanup(userId);
+  await cleanup(userId);
   clearAuth(userId);
   logger.info(`[${userId}] ✅ Disconnected and cleaned up`);
 }

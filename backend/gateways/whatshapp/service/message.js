@@ -1,7 +1,10 @@
+import { addMessage } from "../../db/redis/Messages.js";
+
 export function messageHandler(sock, userId) {
   if (!sock?.ev) return;
 
   sock.ev.on("messages.upsert", ({ messages, type }) => {
+    // "notify" = new messages after WhatsApp connect (casual/live messages)
     if (type === "notify") {
       for (const msg of messages) {
         if (!msg?.key) continue;
@@ -17,12 +20,12 @@ export function messageHandler(sock, userId) {
 
         if (!text) continue;
 
-        console.log(`[${userId}] MESSAGE:`, {
-          jid,
-          fromMe,
-          text,
-          timestamp,
-        });
+        const messageObj = { jid, fromMe, text, timestamp };
+        console.log(`[${userId}] MESSAGE:`, messageObj);
+
+        addMessage(userId, jid, messageObj).catch((err) =>
+          console.error(`[${userId}] Redis save message:`, err.message),
+        );
       }
     }
   });

@@ -1,6 +1,13 @@
 version: "3.9"
 
 services:
+  redis:
+    image: redis:7
+    container_name: omniagent-redis
+    # ports:
+    #   - "6379:6379"
+    restart: unless-stopped
+  
   agent-core:
     build: ./agent-core
     container_name: agent-core

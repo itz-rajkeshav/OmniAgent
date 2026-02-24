@@ -1,4 +1,5 @@
 import pino from "pino";
+import { addMessage } from "../../db/redis/Messages.js";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -7,7 +8,7 @@ const logger = pino({
 export function syncHistory(sock, userId) {
   if (!sock?.ev) return;
 
-  sock.ev.on("messaging-history.set", ({ messages, isLatest }) => {
+  sock.ev.on("messaging-history.set", async ({ messages, isLatest }) => {
     logger.info(
       { userId, event: "messaging-history.set" },
       "History sync started",
@@ -29,14 +30,23 @@ export function syncHistory(sock, userId) {
 
       if (!text) continue;
 
+      const messageObj = { jid, fromMe, text, timestamp };
       logger.info(
         { userId, jid, fromMe, text, timestamp },
-        "New message from history",
+        "Storing history message per convo",
       );
+      try {
+        await addMessage(userId, jid, messageObj);
+      } catch (err) {
+        logger.warn(
+          { userId, jid, err: err.message },
+          "Failed to store history message",
+        );
+      }
     }
 
     if (isLatest !== undefined) {
-      logger.info({ userId, isLatest }, `History sync completed`);
+      logger.info({ userId, isLatest }, "History sync completed");
     }
   });
 }
