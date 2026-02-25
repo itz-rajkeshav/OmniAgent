@@ -7,7 +7,7 @@ services:
     # ports:
     #   - "6379:6379"
     restart: unless-stopped
-  
+
   agent-core:
     build: ./agent-core
     container_name: agent-core
@@ -31,9 +31,12 @@ services:
       - "3000:3000"
     depends_on:
       - agent-core
+      - redis
     environment:
       - AGENT_URL=http://agent-core:8000
       - AGENT_CORE_GRPC_ADDR=agent-core:50051
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./gateways:/app
       - /app/node_modules
