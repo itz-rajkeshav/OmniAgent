@@ -15,10 +15,7 @@ import {
   updateAccountStatus,
   getAccount,
 } from "../grpc/client.js";
-import {
-  deleteMessages,
-  setAgentMode,
-} from "../../db/redis/Messages.js";
+import { deleteMessages, setAgentMode } from "../../db/redis/Messages.js";
 
 const LOG_LEVEL = process.env.WA_LOG_LEVEL || "info";
 
@@ -171,7 +168,12 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
 
   const sessionUserId = userId;
 
+  // Explicit WhatsApp Web version to avoid 405 "Method Not Allowed" when default is outdated.
+
+  const WHATSAPP_VERSION = [2, 3000, 1034014433];
+
   const sock = makeWASocket({
+    version: WHATSAPP_VERSION,
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, logger),
@@ -235,9 +237,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
             );
             const agentMode = result.agent_mode || "casual";
             await setAgentMode(sessionUserId, agentMode);
-            logger.info(
-              `[${sessionUserId}] Agent mode set to: ${agentMode}`,
-            );
+            logger.info(`[${sessionUserId}] Agent mode set to: ${agentMode}`);
           } else {
             logger.error(
               `[${sessionUserId}] gRPC SaveAccount returned failure: ${result?.message ?? "unknown"}`,
