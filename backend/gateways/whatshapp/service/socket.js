@@ -46,7 +46,7 @@ function authDir(userId) {
   return path.join(AUTH_BASE, `user_${userId}`);
 }
 
-async function cleanup(userId) {
+async function cleanup(userId, { clearRedis = false } = {}) {
   const s = sessions.get(userId);
   if (s?.sock) {
     try {
@@ -58,11 +58,13 @@ async function cleanup(userId) {
     }
   }
   sessions.delete(userId);
-  try {
-    await deleteMessages(userId);
-    logger.info(`[${userId}] Messages cleared from Redis`);
-  } catch (e) {
-    logger.warn(`[${userId}] Redis delete messages: ${e.message}`);
+  if (clearRedis) {
+    try {
+      await deleteMessages(userId);
+      logger.info(`[${userId}] Messages cleared from Redis`);
+    } catch (e) {
+      logger.warn(`[${userId}] Redis delete messages: ${e.message}`);
+    }
   }
 }
 
@@ -282,9 +284,8 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
         `[${sessionUserId}] ❌ Disconnected (reason: ${reason}, code: ${statusCode})`,
       );
 
-      await cleanup(sessionUserId);
-
       if (loggedOut) {
+        await cleanup(sessionUserId, { clearRedis: true });
         clearAuth(sessionUserId);
         logger.fatal(
           `[${sessionUserId}] 🚫 Logged out - auth cleared. Requires re-scan.`,
@@ -300,6 +301,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
             ),
           );
       } else {
+        await cleanup(sessionUserId);
         logger.info(`[${sessionUserId}] 🔄 Reconnecting in 3s...`);
         setTimeout(() => connectWhatsapp(sessionUserId), 3000);
       }
@@ -358,7 +360,7 @@ export async function disconnectUser(userId) {
       logger.warn(`[${userId}] Logout error: ${e.message}`);
     }
   }
-  await cleanup(userId);
+  await cleanup(userId, { clearRedis: true });
   clearAuth(userId);
   logger.info(`[${userId}] ✅ Disconnected and cleaned up`);
 }
@@ -379,11 +381,39 @@ export function isUserConnected(userId) {
   return sessions.get(userId)?.status === "connected";
 }
 
+// bcz on every nodemon start it will kill the connection automatically ..that fix
+export async function reconnectExistingSessions() {
+  if (!fs.existsSync(AUTH_BASE)) return;
+
+  const entries = fs.readdirSync(AUTH_BASE, { withFileTypes: true });
+  const userDirs = entries
+    .filter((e) => e.isDirectory() && e.name.startsWith("user_"))
+    .map((e) => e.name.replace(/^user_/, ""));
+
+  if (userDirs.length === 0) {
+    logger.info("No saved auth sessions found, skipping auto-reconnect");
+    return;
+  }
+
+  logger.info(
+    `Found ${userDirs.length} saved session(s), auto-reconnecting: [${userDirs.join(", ")}]`,
+  );
+
+  for (const userId of userDirs) {
+    try {
+      await connectWhatsapp(userId);
+      logger.info(`[${userId}] Auto-reconnect initiated`);
+    } catch (err) {
+      logger.error(`[${userId}] Auto-reconnect failed: ${err.message}`);
+    }
+  }
+}
+
 async function shutdown() {
   logger.info("🛑 Shutting down WhatsApp sessions...");
   const userIds = Array.from(sessions.keys());
   for (const userId of userIds) {
-    await disconnectUser(userId).catch((e) =>
+    await cleanup(userId).catch((e) =>
       logger.error(`Failed to disconnect ${userId}: ${e.message}`),
     );
   }

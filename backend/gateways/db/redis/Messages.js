@@ -18,10 +18,6 @@ function agentModeKey(userId) {
   return `${AGENT_MODE_PREFIX}${userId}`;
 }
 
-/**
- * Store agent mode when user connects (from SaveAccount response).
- * Used to decide: casual = store all messages per convo, professional = last 10 per convo.
- */
 export async function setAgentMode(userId, mode) {
   if (!userId) return;
   const normalized = (mode || "casual").toLowerCase();
@@ -35,26 +31,30 @@ export async function getAgentMode(userId) {
   return mode === "professional" ? "professional" : "casual";
 }
 
-/**
- * Add a message to the conversation (userId's chat with jid).
- * Casual: append and keep all. Professional: append then trim to last 10 per convo.
- */
-export async function addMessage(userId, jid, messageObj) {
+export async function addMessage(userId, jid, messageObj, source = "notify") {
   if (!userId || !jid) return;
   const k = convoKey(userId, jid);
   const jidsK = jidsKey(userId);
   const value = JSON.stringify(messageObj);
   await redisClient.sadd(jidsK, jid);
   await redisClient.rpush(k, value);
+
   const mode = await getAgentMode(userId);
-  if (mode === "professional") {
-    await redisClient.ltrim(k, -PROFESSIONAL_MAX_PER_CONVO, -1);
+
+  if (source === "notify") {
+    if (mode === "casual") {
+      const len = await redisClient.llen(k);
+      if (len > 1) await redisClient.lpop(k);
+    } else {
+      await redisClient.ltrim(k, -PROFESSIONAL_MAX_PER_CONVO, -1);
+    }
+  } else {
+    if (mode === "professional") {
+      await redisClient.ltrim(k, -PROFESSIONAL_MAX_PER_CONVO, -1);
+    }
   }
 }
 
-/**
- * Get messages for one conversation (for LLM context for that chat).
- */
 export async function getMessagesForConvo(userId, jid) {
   if (!userId || !jid) return [];
   const k = convoKey(userId, jid);
@@ -68,11 +68,6 @@ export async function getMessagesForConvo(userId, jid) {
   });
 }
 
-/**
- * Get full conversation context for a user: all jids and their messages.
- * Use this to build LLM context per convo.
- * Returns { [jid]: [ { jid, fromMe, text, timestamp }, ... ], ... }
- */
 export async function getConversationContext(userId) {
   if (!userId) return {};
   const jidsK = jidsKey(userId);
@@ -84,17 +79,11 @@ export async function getConversationContext(userId) {
   return context;
 }
 
-/**
- * Get list of jids (conversations) for a user.
- */
 export async function getConversationJids(userId) {
   if (!userId) return [];
   return redisClient.smembers(jidsKey(userId));
 }
 
-/**
- * Delete all message data for a user (all convos + agent_mode). Call on logout.
- */
 export async function deleteAllUserMessages(userId) {
   if (!userId) return;
   const jidsK = jidsKey(userId);
@@ -108,12 +97,10 @@ export async function deleteAllUserMessages(userId) {
   await pipeline.exec();
 }
 
-/** @deprecated Use deleteAllUserMessages. Kept for compatibility. */
 export async function deleteMessages(userId) {
   return deleteAllUserMessages(userId);
 }
 
-/** @deprecated Use getMessagesForConvo or getConversationContext. Kept for compatibility. */
 export async function getMessages(userId) {
   const ctx = await getConversationContext(userId);
   const out = [];

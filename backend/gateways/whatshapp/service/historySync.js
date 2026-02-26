@@ -36,7 +36,7 @@ export function syncHistory(sock, userId) {
         "Storing history message per convo",
       );
       try {
-        await addMessage(userId, jid, messageObj);
+        await addMessage(userId, jid, messageObj, "history");
       } catch (err) {
         logger.warn(
           { userId, jid, err: err.message },
