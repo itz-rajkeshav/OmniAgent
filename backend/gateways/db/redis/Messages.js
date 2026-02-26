@@ -3,8 +3,10 @@ import redisClient from "./redis.js";
 const KEY_PREFIX = "messages:";
 const JIDS_KEY_PREFIX = "message_jids:";
 const AGENT_MODE_PREFIX = "agent_mode:";
+const AGENT_TONE_PREFIX = "agent_tone:";
 
 const PROFESSIONAL_MAX_PER_CONVO = 10;
+const DEFAULT_TONE_ID = "casual_friendly";
 
 function convoKey(userId, jid) {
   return `${KEY_PREFIX}${userId}:${jid}`;
@@ -18,6 +20,10 @@ function agentModeKey(userId) {
   return `${AGENT_MODE_PREFIX}${userId}`;
 }
 
+function agentToneKey(userId) {
+  return `${AGENT_TONE_PREFIX}${userId}`;
+}
+
 export async function setAgentMode(userId, mode) {
   if (!userId) return;
   const normalized = (mode || "casual").toLowerCase();
@@ -29,6 +35,17 @@ export async function getAgentMode(userId) {
   if (!userId) return "casual";
   const mode = await redisClient.get(agentModeKey(userId));
   return mode === "professional" ? "professional" : "casual";
+}
+
+export async function setAgentTone(userId, tone) {
+  if (!userId || !tone) return;
+  await redisClient.set(agentToneKey(userId), String(tone));
+}
+
+export async function getAgentTone(userId) {
+  if (!userId) return DEFAULT_TONE_ID;
+  const tone = await redisClient.get(agentToneKey(userId));
+  return tone || DEFAULT_TONE_ID;
 }
 
 export async function addMessage(userId, jid, messageObj, source = "notify") {
@@ -94,6 +111,7 @@ export async function deleteAllUserMessages(userId) {
   }
   pipeline.del(jidsK);
   pipeline.del(agentModeKey(userId));
+  pipeline.del(agentToneKey(userId));
   await pipeline.exec();
 }
 

@@ -2,19 +2,33 @@ import asyncio
 import os
 from groq import Groq
 
-Groq_Apikey=os.getenv("GROK_APIKEY")
+from ai.tones import get_tone_prompt
 
-async def call_groq(prompt:str, max_retries:int=3)->str:
-    
+Groq_Apikey = os.getenv("GROK_APIKEY")
+
+
+def _build_messages(user_content: str, tone_id: str | None = None):
+    """Build messages list: optional system from tone, then user content."""
+    messages = []
+    if tone_id:
+        system_prompt = get_tone_prompt(tone_id)
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": user_content})
+    return messages
+
+
+async def call_groq(
+    prompt: str,
+    max_retries: int = 3,
+    tone_id: str | None = None,
+) -> str:
     if not Groq_Apikey:
         return {
-            "status":"error",
-            "message":"Groq API KEY is not set "
+            "status": "error",
+            "message": "Groq API KEY is not set ",
         }
-    client = Groq(api_key = Groq_Apikey)
-
-# run in execute.. basically say to process this into the other thread
-# .get_event_loop basically tell to run inside the event loop
+    client = Groq(api_key=Groq_Apikey)
+    messages = _build_messages(prompt, tone_id)
 
     for attempt in range(max_retries):
         try:
@@ -22,12 +36,12 @@ async def call_groq(prompt:str, max_retries:int=3)->str:
             response = await loop.run_in_executor(
                 None,
                 lambda: client.chat.completions.create(
-                    model = "llama-3.1-8b-instant",
-                    messages=[{"role":"user","content":prompt}],
+                    model="llama-3.1-8b-instant",
+                    messages=messages,
                     temperature=0.1,
                     max_tokens=500,
-                    timeout=30
-                )
+                    timeout=30,
+                ),
             )
             return response.choices[0].message.content
 

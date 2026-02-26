@@ -1,14 +1,18 @@
 from sqlalchemy.orm import Session
 from ..models.whatshappAccount import WhatshappAccount
 from datetime import datetime
+from ai.tones import is_valid_tone, DEFAULT_TONE_ID
 
-def create_whatshapp_account(db:Session, user_id:str, phone_number:str, jid:str, agent_mode:str = "casual"):
+def create_whatshapp_account(db:Session, user_id:str, phone_number:str, jid:str, agent_mode:str = "casual", agent_tone:str = "casual_friendly"):
+    if not is_valid_tone(agent_tone):
+        agent_tone = DEFAULT_TONE_ID
     account_creation = WhatshappAccount(
         user_id=user_id,
         phone_number=phone_number,
         jid=jid,
         status="active",
         agent_mode=agent_mode,
+        agent_tone=agent_tone,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
@@ -98,6 +102,19 @@ def update_whatshapp_account_agent_mode(db: Session, user_id: str, agent_mode: s
     if not account:
         return {"status": "error", "message": "Whatshapp account not found"}
     account.agent_mode = agent_mode
+    account.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(account)
+    return {"status": "success", "message": "Whatshapp account updated successfully", "account": account}
+
+
+def update_whatshapp_account_agent_tone(db: Session, user_id: str, agent_tone: str):
+    if not is_valid_tone(agent_tone):
+        agent_tone = DEFAULT_TONE_ID
+    account = db.query(WhatshappAccount).filter(WhatshappAccount.user_id == user_id).first()
+    if not account:
+        return {"status": "error", "message": "Whatshapp account not found"}
+    account.agent_tone = agent_tone
     account.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(account)

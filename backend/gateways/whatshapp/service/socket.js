@@ -15,7 +15,11 @@ import {
   updateAccountStatus,
   getAccount,
 } from "../grpc/client.js";
-import { deleteMessages, setAgentMode } from "../../db/redis/Messages.js";
+import {
+  deleteMessages,
+  setAgentMode,
+  setAgentTone,
+} from "../../db/redis/Messages.js";
 
 const LOG_LEVEL = process.env.WA_LOG_LEVEL || "info";
 
@@ -238,13 +242,16 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
               `[${sessionUserId}] gRPC SaveAccount: ${result.message}`,
             );
             const agentMode = result.agent_mode || "casual";
+            const agentTone = result.agent_tone || "casual_friendly";
             await setAgentMode(sessionUserId, agentMode);
-            logger.info(`[${sessionUserId}] Agent mode set to: ${agentMode}`);
+            await setAgentTone(sessionUserId, agentTone);
+            logger.info(`[${sessionUserId}] Agent mode set to: ${agentMode}, tone: ${agentTone}`);
           } else {
             logger.error(
               `[${sessionUserId}] gRPC SaveAccount returned failure: ${result?.message ?? "unknown"}`,
             );
             await setAgentMode(sessionUserId, "casual");
+            await setAgentTone(sessionUserId, "casual_friendly");
           }
         } else {
           logger.warn(

@@ -10,7 +10,9 @@ from db.supabase.crud.WhatshappAccount_crud import (
     update_whatshapp_account_by_phone,
     update_whatshapp_account_status_by_jid,
     update_whatshapp_account_agent_mode,
+    update_whatshapp_account_agent_tone,
 )
+from ai.tones import is_valid_tone
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,7 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         jid=account.jid,
                         status=account.status,
                         agent_mode=getattr(account, "agent_mode", "casual"),
+                        agent_tone=getattr(account, "agent_tone", "casual_friendly"),
                     )
                 else:
                     account = create_whatshapp_account(
@@ -59,13 +62,14 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         jid=account["account"].jid,
                         status=account["account"].status,
                         agent_mode=account["account"].agent_mode,
+                        agent_tone=getattr(account["account"], "agent_tone", "casual_friendly"),
                     )
 
         except Exception as e:
             logger.error(f"[SaveAccount] error: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return omniagent_pb2.SaveAccountResponse(success=False, message=str(e), phone_number="", jid="", status="", agent_mode="")
+            return omniagent_pb2.SaveAccountResponse(success=False, message=str(e), phone_number="", jid="", status="", agent_mode="", agent_tone="")
 
     def UpdateAccountStatus(self, request: omniagent_pb2.UpdateStatusRequest, context):
         logger.info(f"[UpdateAccountStatus] user_id={request.user_id} status={request.status} jid={getattr(request, 'jid', '') or ''}")
@@ -83,12 +87,15 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         status=request.status,
                     )
                 if result["status"] == "success":
+                    acc = result["account"]
                     return omniagent_pb2.UpdateStatusResponse(
                         success=True,
                         message=f"Status updated to {request.status}",
-                        phone_number=result["account"].phone_number,
-                        jid=result["account"].jid,
-                        status=result["account"].status,
+                        phone_number=acc.phone_number,
+                        jid=acc.jid,
+                        status=acc.status,
+                        agent_mode=getattr(acc, "agent_mode", "casual"),
+                        agent_tone=getattr(acc, "agent_tone", "casual_friendly"),
                     )
                 return omniagent_pb2.UpdateStatusResponse(
                     success=False,
@@ -96,13 +103,15 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                     jid="",
                     status="",
                     message="Account not found",
+                    agent_mode="",
+                    agent_tone="",
                 )
 
         except Exception as e:
             logger.error(f"[UpdateAccountStatus] error: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return omniagent_pb2.UpdateStatusResponse(success=False, message=str(e), phone_number="", jid="", status="")
+            return omniagent_pb2.UpdateStatusResponse(success=False, message=str(e), phone_number="", jid="", status="", agent_mode="", agent_tone="")
 
   
     def GetAccount(self, request: omniagent_pb2.GetAccountRequest, context):
@@ -118,6 +127,8 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
                         phone_number=account.phone_number,
                         jid=account.jid,
                         status=account.status,
+                        agent_mode=getattr(account, "agent_mode", "casual"),
+                        agent_tone=getattr(account, "agent_tone", "casual_friendly"),
                     )
                 return omniagent_pb2.GetAccountResponse(found=False)
 
@@ -133,13 +144,40 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
             with get_db_session() as db:
                 result = update_whatshapp_account_agent_mode(db, request.user_id, request.agent_mode)
                 if result["status"] == "success":
-                    return omniagent_pb2.UpdateAgentModeResponse(success=True, message=f"Agent mode updated to {request.agent_mode}")
-                return omniagent_pb2.UpdateAgentModeResponse(success=False, message="Agent mode not found")
+                    acc = result["account"]
+                    return omniagent_pb2.UpdateAgentModeResponse(
+                        success=True,
+                        message=f"Agent mode updated to {request.agent_mode}",
+                        agent_mode=acc.agent_mode,
+                        agent_tone=getattr(acc, "agent_tone", "casual_friendly"),
+                    )
+                return omniagent_pb2.UpdateAgentModeResponse(success=False, message="Agent mode not found", agent_mode="", agent_tone="")
         except Exception as e:
             logger.error(f"[UpdateAgentMode] error: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return omniagent_pb2.UpdateAgentModeResponse(success=False, message=str(e))
+            return omniagent_pb2.UpdateAgentModeResponse(success=False, message=str(e), agent_mode="", agent_tone="")
+
+    def UpdateAgentTone(self, request: omniagent_pb2.UpdateAgentToneRequest, context):
+        logger.info(f"[UpdateAgentTone] user_id={request.user_id} agent_tone={request.agent_tone}")
+        if not is_valid_tone(request.agent_tone):
+            return omniagent_pb2.UpdateAgentToneResponse(success=False, message=f"Invalid agent_tone: {request.agent_tone}", agent_tone="")
+        try:
+            with get_db_session() as db:
+                result = update_whatshapp_account_agent_tone(db, request.user_id, request.agent_tone)
+                if result["status"] == "success":
+                    acc = result["account"]
+                    return omniagent_pb2.UpdateAgentToneResponse(
+                        success=True,
+                        message=f"Agent tone updated to {request.agent_tone}",
+                        agent_tone=getattr(acc, "agent_tone", "casual_friendly"),
+                    )
+                return omniagent_pb2.UpdateAgentToneResponse(success=False, message="Account not found", agent_tone="")
+        except Exception as e:
+            logger.error(f"[UpdateAgentTone] error: {e}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return omniagent_pb2.UpdateAgentToneResponse(success=False, message=str(e), agent_tone="")
 
 def serve() -> grpc.Server:
     server = grpc.server(

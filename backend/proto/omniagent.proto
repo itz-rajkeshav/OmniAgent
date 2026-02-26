@@ -5,10 +5,10 @@ package omniagent;
 
 service WhatsappService {
   rpc SaveAccount (SaveAccountRequest) returns (SaveAccountResponse);
-
   rpc UpdateAccountStatus (UpdateStatusRequest) returns (UpdateStatusResponse);
-
   rpc GetAccount (GetAccountRequest) returns (GetAccountResponse);
+  rpc UpdateAgentMode (UpdateAgentModeRequest) returns (UpdateAgentModeResponse);
+  rpc UpdateAgentTone (UpdateAgentToneRequest) returns (UpdateAgentToneResponse);
 }
 
 message SaveAccountRequest {
@@ -24,6 +24,7 @@ message SaveAccountResponse {
   string jid          = 4;
   string status       = 5;
   string agent_mode   = 6;
+  string agent_tone   = 7;
 }
 
 message UpdateStatusRequest {
@@ -39,6 +40,7 @@ message UpdateStatusResponse {
   string jid =4;
   string status =5;
   string agent_mode =6;
+  string agent_tone =7;
 }
 
 message GetAccountRequest {
@@ -52,18 +54,28 @@ message GetAccountResponse {
   string jid          = 4;
   string status       = 5;
   string agent_mode   = 6;
+  string agent_tone   = 7;
 }
 
-message updateAgentModeRequest{
-  string user_id    =1;
-  string agent_mode =2;
+message UpdateAgentModeRequest {
+  string user_id    = 1;
+  string agent_mode = 2;
 }
 
-message updateAgentModeResponse{
-  bool   found        = 1;
-  string user_id      = 2;
-  string phone_number = 3;
-  string jid          = 4;
-  string status       = 5;
-  string agent_mode   = 6;
+message UpdateAgentModeResponse {
+  bool   success = 1;
+  string message = 2;
+  string agent_mode = 3;
+  string agent_tone = 4;
+}
+
+message UpdateAgentToneRequest {
+  string user_id    = 1;
+  string agent_tone = 2;
+}
+
+message UpdateAgentToneResponse {
+  bool   success = 1;
+  string message = 2;
+  string agent_tone = 3;
 }

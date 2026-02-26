@@ -71,12 +71,30 @@ export function getAccount(phoneNumber) {
 
 export function updateAgentMode(userId, agentMode) {
   return new Promise((resolve, reject) => {
-    client.UpdateAgentMode({ user_id: userId, agent_mode: agentMode }, (err, response) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(response);
-    });
+    client.UpdateAgentMode(
+      { user_id: userId, agent_mode: agentMode },
+      (err, response) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(response);
+      },
+    );
+  });
+}
+
+export function updateAgentTone(userId, agentTone) {
+  return new Promise((resolve, reject) => {
+    client.UpdateAgentTone(
+      { user_id: userId, agent_tone: agentTone },
+      (err, response) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(response);
+      },
+    );
   });
 }
