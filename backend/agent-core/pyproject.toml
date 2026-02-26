@@ -20,6 +20,7 @@ dependencies = [
     "psycopg2-binary>=2.9.0",
     "grpcio>=1.62.0",
     "grpcio-tools>=1.62.0",
+    "grok>=6.2",
 ]
 
 [project.optional-dependencies]
