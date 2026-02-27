@@ -1,5 +1,5 @@
 import pino from "pino";
-import { addMessage } from "../../db/redis/Messages.js";
+import { addMessage, isJidBlocked } from "../../db/redis/Messages.js";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -29,6 +29,8 @@ export function syncHistory(sock, userId) {
         null;
 
       if (!text) continue;
+
+      if (await isJidBlocked(userId, jid)) continue;
 
       const messageObj = { jid, fromMe, text, timestamp };
       logger.info(

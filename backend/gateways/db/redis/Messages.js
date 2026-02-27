@@ -4,6 +4,7 @@ const KEY_PREFIX = "messages:";
 const JIDS_KEY_PREFIX = "message_jids:";
 const AGENT_MODE_PREFIX = "agent_mode:";
 const AGENT_TONE_PREFIX = "agent_tone:";
+const BLOCKED_JIDS_PREFIX = "blocked_jids:";
 
 const PROFESSIONAL_MAX_PER_CONVO = 10;
 const DEFAULT_TONE_ID = "casual_friendly";
@@ -22,6 +23,30 @@ function agentModeKey(userId) {
 
 function agentToneKey(userId) {
   return `${AGENT_TONE_PREFIX}${userId}`;
+}
+
+function blockedJidsKey(userId) {
+  return `${BLOCKED_JIDS_PREFIX}${userId}`;
+}
+
+export async function addBlockedJid(userId, jid) {
+  if (!userId || !jid) return;
+  await redisClient.sadd(blockedJidsKey(userId), jid);
+}
+
+export async function removeBlockedJid(userId, jid) {
+  if (!userId || !jid) return;
+  await redisClient.srem(blockedJidsKey(userId), jid);
+}
+
+export async function getBlockedJids(userId) {
+  if (!userId) return [];
+  return redisClient.smembers(blockedJidsKey(userId));
+}
+
+export async function isJidBlocked(userId, jid) {
+  if (!userId || !jid) return false;
+  return redisClient.sismember(blockedJidsKey(userId), jid);
 }
 
 export async function setAgentMode(userId, mode) {
@@ -112,6 +137,7 @@ export async function deleteAllUserMessages(userId) {
   pipeline.del(jidsK);
   pipeline.del(agentModeKey(userId));
   pipeline.del(agentToneKey(userId));
+  // Do not clear blocked_jids so blocklist survives message clear / logout
   await pipeline.exec();
 }
 

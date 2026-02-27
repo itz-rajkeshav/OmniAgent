@@ -5,9 +5,20 @@ import {
   getUserStatus,
   disconnectUser,
   getAllSessions,
+  getSocket,
 } from "../service/socket.js";
+import {
+  getConversationJids,
+  getMessagesForConvo,
+  getBlockedJids,
+  addBlockedJid,
+  removeBlockedJid,
+} from "../../db/redis/Messages.js";
+import { isGroupJid } from "../utils/jid.js";
 
 const router = express.Router();
+
+const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 function getUserId(req) {
   return (
@@ -145,6 +156,132 @@ router.get(["/status", "/status/:userId"], (req, res) => {
 
 router.get("/sessions", (req, res) => {
   res.json({ success: true, sessions: getAllSessions() });
+});
+
+router.get(["/chats", "/chats/:userId"], async (req, res) => {
+  const userId = getUserId(req);
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+
+  const sock = getSocket(userId);
+  if (!sock) {
+    return res.status(503).json({
+      success: false,
+      message: "User must be connected to WhatsApp to list chats",
+    });
+  }
+
+  try {
+    let groups = [];
+    if (typeof sock.groupFetchAllParticipating === "function") {
+      const groupsMap = await sock.groupFetchAllParticipating();
+      groups = Object.entries(groupsMap || {}).map(([jid, g]) => ({
+        jid: g?.id || jid,
+        name: g?.subject || jid?.split?.("@")?.[0] || jid || "",
+        isGroup: true,
+      }));
+    }
+
+    const recentJids = await getConversationJids(userId);
+    const recentWithMeta = [];
+    const now = Date.now();
+    for (const jid of recentJids) {
+      const msgs = await getMessagesForConvo(userId, jid);
+      const lastMsg = msgs.length ? msgs[msgs.length - 1] : null;
+      const lastTs = lastMsg?.timestamp ? lastMsg.timestamp * 1000 : 0;
+      const withinMonth = now - lastTs <= ONE_MONTH_MS;
+      const name =
+        groups.find((x) => x.jid === jid)?.name || jid.split("@")[0] || jid;
+      recentWithMeta.push({
+        jid,
+        isGroup: isGroupJid(jid),
+        name,
+        lastActivity: lastTs || null,
+        withinLastMonth: withinMonth,
+      });
+    }
+
+    res.json({
+      success: true,
+      userId,
+      groups,
+      recentChats: recentWithMeta,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to fetch chats",
+    });
+  }
+});
+
+router.post(["/block", "/block-group"], express.json(), async (req, res) => {
+  const userId = req.body?.userId || req.params.userId || req.query.userId;
+  const jid = req.body?.jid;
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+  if (!jid || typeof jid !== "string") {
+    return res
+      .status(400)
+      .json({ success: false, message: "jid is required" });
+  }
+  try {
+    await addBlockedJid(userId, jid);
+    res.json({ success: true, message: "Chat blocked", jid });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to block",
+    });
+  }
+});
+
+router.post(["/unblock", "/unblock-group"], express.json(), async (req, res) => {
+  const userId = req.body?.userId || req.params.userId || req.query.userId;
+  const jid = req.body?.jid;
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+  if (!jid || typeof jid !== "string") {
+    return res
+      .status(400)
+      .json({ success: false, message: "jid is required" });
+  }
+  try {
+    await removeBlockedJid(userId, jid);
+    res.json({ success: true, message: "Chat unblocked", jid });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to unblock",
+    });
+  }
+});
+
+router.get(["/blocked", "/blocked/:userId", "/blocked-groups", "/blocked-groups/:userId"], async (req, res) => {
+  const userId = getUserId(req);
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+  try {
+    const blockedJids = await getBlockedJids(userId);
+    res.json({ success: true, userId, blockedJids });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to fetch blocked list",
+    });
+  }
 });
 
 export default router;
