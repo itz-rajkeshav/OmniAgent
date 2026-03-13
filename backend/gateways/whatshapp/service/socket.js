@@ -69,6 +69,7 @@ async function cleanup(userId, { clearRedis = false } = {}) {
     } catch (e) {
       logger.warn(`[${userId}] Redis delete messages: ${e.message}`);
     }
+    clearAuth(userId);
   }
 }
 
@@ -245,7 +246,9 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
             const agentTone = result.agent_tone || "casual_friendly";
             await setAgentMode(sessionUserId, agentMode);
             await setAgentTone(sessionUserId, agentTone);
-            logger.info(`[${sessionUserId}] Agent mode set to: ${agentMode}, tone: ${agentTone}`);
+            logger.info(
+              `[${sessionUserId}] Agent mode set to: ${agentMode}, tone: ${agentTone}`,
+            );
           } else {
             logger.error(
               `[${sessionUserId}] gRPC SaveAccount returned failure: ${result?.message ?? "unknown"}`,
@@ -424,6 +427,7 @@ async function shutdown() {
       logger.error(`Failed to disconnect ${userId}: ${e.message}`),
     );
   }
+
   logger.info("✅ All sessions closed");
   process.exit(0);
 }
