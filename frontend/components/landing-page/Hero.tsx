@@ -1,12 +1,16 @@
 "use client";
-
+import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { ArrowRight, MessageSquare, ShieldCheck, Zap, Sparkles, MoreHorizontal, FileText, History } from "lucide-react";
+import { ArrowRight, MessageSquare, ShieldCheck, Zap, MoreHorizontal, FileText, History } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Hero() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const handleGoogleSignIn = async () => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -64,16 +68,17 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <Link href="/dashboard" className="w-full sm:w-auto">
+              <div className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={handleGoogleSignIn}
                   className="relative group w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-white overflow-hidden shadow-[0_0_20px_rgba(2,132,199,0.2)] hover:shadow-[0_0_30px_rgba(2,132,199,0.3)] transition-shadow bg-brand-accent-blue flex items-center justify-center gap-2"
                 >
-                  <span className="relative z-10">Get Early Access</span>
+                  <span className="relative z-10">Get Started</span>
                   <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
-              </Link>
+              </div>
               
               <Link href="#how-it-works" className="w-full sm:w-auto">
                 <motion.button
@@ -89,7 +94,10 @@ export default function Hero() {
           </motion.div>
 
           {/* Right Column: Isometric 3D Visualization */}
-          <div className="relative h-[500px] sm:h-[650px] w-full mt-12 lg:mt-0 perspective-1000 hidden md:block">
+                    {/* <div className="relative h-[500px] sm:h-[650px] w-full mt-12 lg:mt-0 perspective-1000 hidden md:block"></div> */}
+          <div className="relative h-[380px] sm:h-[500px] md:h-[650px] w-full mt-4 sm:mt-12 lg:mt-0 perspective-1000">
+            {/* extra div  */}
+            <div className="absolute inset-0 scale-[0.65] sm:scale-[0.85] md:scale-100 origin-center flex items-center justify-center md:block">
             {/* The underlying Box Backdrop (Using Indigo/Blue Gradient to match Professional Mode) */}
             <motion.div 
                initial={{ opacity: 0, scale: 0.9 }}
@@ -202,7 +210,9 @@ export default function Hero() {
               </motion.div>
 
             </div>
+            </div>
           </div>
+          {/* extra div */}
           
         </div>
       </div>
