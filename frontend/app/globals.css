@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+@theme {
+    --color-brand-background: #ffffff;
+    --color-brand-foreground: #09090b;
+    --color-brand-accent-blue: #0284c7;
+    --color-brand-accent-blue-light: #7dd3fc;
+    --color-brand-accent-emerald: #10b981;
+}
+
+@layer base {
+    body {
+        @apply bg-brand-background text-brand-foreground antialiased;
+    }
+}
+
+@layer utilities {
+    .text-glow {
+        text-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .glass-card {
+        @apply bg-white/70 backdrop-blur-md border border-zinc-200;
+        box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.05);
+    }
+
+    .gradient-text {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-brand-accent-blue;
+    }
+}
