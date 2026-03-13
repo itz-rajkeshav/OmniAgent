@@ -99,7 +99,7 @@ export default function ProModeTiming() {
                 <div className="w-px h-10 bg-zinc-200"></div>
                 <div>
                   <div className="text-xs text-zinc-500 uppercase mb-1 font-bold tracking-wider">Casual Window</div>
-                  <div className="text-brand-accent-blue font-bold font-outfit text-xl">1 Message</div>
+                  <div className="text-brand-accent-blue font-bold font-outfit text-xl">All Messages</div>
                 </div>
               </div>
             </div>

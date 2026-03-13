@@ -15,6 +15,29 @@ export default function CTASection() {
         />
       </div>
 
+      {/* Concentric Circles Design */}
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] pointer-events-none opacity-40 z-0 hidden md:block">
+        <motion.svg
+          viewBox="0 0 100 100"
+          className="w-full h-full text-brand-accent-emerald"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+        >
+          {[...Array(15)].map((_, i) => (
+            <circle
+              key={i}
+              cx="50"
+              cy="50"
+              r={15 + i * 2.5}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.2"
+              strokeDasharray={i % 3 === 0 ? "1 2" : (i % 2 === 0 ? "2 4" : "none")}
+            />
+          ))}
+        </motion.svg>
+      </div>
+
       <div className="container mx-auto px-4 relative z-10 text-center">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
@@ -28,27 +51,26 @@ export default function CTASection() {
 
           <div className="relative z-10">
             <h2 className="font-outfit text-3xl md:text-6xl font-bold mb-6 tracking-tight text-zinc-900">
-              Ready to Put Your Chats on <span className="text-brand-accent-blue">Autopilot?</span>
+              Ready to Let AI Handle <span className="text-brand-accent-blue">Your Chats?</span>
             </h2>
             <p className="text-zinc-600 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-inter">
-              Join the early access list. Be the first to let AI handle your messages — your way.
+              OmniAgent is live. Connect your WhatsApp or Telegram account and let your AI run your conversations — your tone, your rules.
             </p>
 
-            <form className="max-w-md mx-auto relative flex items-center" onSubmit={(e) => e.preventDefault()}>
-              <input 
-                type="email" 
-                placeholder="Enter your email address" 
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-full py-3 md:py-4 pl-4 md:pl-6 pr-28 md:pr-36 focus:outline-none focus:border-brand-accent-blue transition-colors text-sm md:text-base text-zinc-900 font-inter placeholder:text-zinc-400"
-                required
-              />
-              <button 
-                type="submit"
-                className="absolute right-1.5 md:right-2 top-1.5 md:top-2 bottom-1.5 md:bottom-2 bg-brand-accent-blue hover:bg-brand-accent-blue/90 text-white font-semibold rounded-full px-4 md:px-6 text-sm flex items-center gap-1.5 md:gap-2 transition-all hover:scale-105 active:scale-95 shadow-sm"
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="/dashboard"
+                className="px-8 py-4 rounded-full bg-brand-accent-blue hover:bg-brand-accent-blue/90 text-white font-semibold text-base flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
-                Join Waitlist
-              </button>
-            </form>
-            <p className="text-xs text-zinc-500 mt-4 font-inter">No spam. Unsubscribe at any time.</p>
+                Get Started <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="#how-it-works"
+                className="px-8 py-4 rounded-full border border-zinc-200 text-zinc-700 hover:text-brand-accent-blue hover:border-brand-accent-blue/30 font-medium text-base flex items-center gap-2 transition-all bg-white hover:bg-zinc-50"
+              >
+                See How It Works
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>

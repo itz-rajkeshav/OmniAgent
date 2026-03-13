@@ -58,7 +58,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             <button className="hidden md:flex relative items-center justify-center px-6 py-2 text-sm font-semibold text-white transition-all rounded-full overflow-hidden group bg-brand-accent-blue hover:bg-brand-accent-blue/90 border border-brand-accent-blue/20 shadow-lg hover:shadow-xl">
               <span className="absolute inset-0 w-full h-full bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
-              Get Early Access
+              Get Started
             </button>
             <button 
               className="md:hidden p-2 text-zinc-600 hover:text-brand-accent-blue"
