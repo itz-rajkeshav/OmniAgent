@@ -8,7 +8,7 @@ router = APIRouter()
 async def google_auth(request: GoogleAuthRequest):
     try:
         
-        result = authenticate_google_user(request.id_token, request.email, request.name)        
+        result = authenticate_google_user(request)
         return {
             "user": result["user"],
             "token": result["token"],

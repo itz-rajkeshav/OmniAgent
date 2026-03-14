@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 load_dotenv()
 
@@ -93,7 +93,8 @@ def authenticate_google_user(request: GoogleAuthRequest):
                 "email": google_user["email"],
                 "name": google_user.get("name"),
                 "picture": google_user.get("picture"),
-                "google_id": google_user["sub"]
+                "google_id": google_user["sub"],
+                "created_at": datetime.now(timezone.utc).isoformat()
             }
             insert_result = supabase.table("users").insert(new_user).execute()
             google_id = google_user["sub"]

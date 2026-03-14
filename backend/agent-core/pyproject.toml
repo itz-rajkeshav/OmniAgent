@@ -21,6 +21,8 @@ dependencies = [
     "grpcio>=1.62.0",
     "grpcio-tools>=1.62.0",
     "grok>=6.2",
+    "supabase>=2.28.0",
+    "google-auth>=2.49.1",
 ]
 
 [project.optional-dependencies]

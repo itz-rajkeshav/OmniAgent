@@ -8,7 +8,8 @@ def create_user_source(db: Session, user_id: str, source_id: str, source_title:s
         user_id=user_id,
         source_id=source_id,
         source_title=source_title,
-        source_type=source_type
+        source_type=source_type,
+        created_at=datetime.utcnow()
     )
     db.add(user_source)
     db.commit()
