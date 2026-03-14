@@ -2,8 +2,13 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function CTASection() {
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
+
   return (
     <section className="py-32 relative overflow-hidden bg-white">
       {/* Background Glow */}
@@ -58,12 +63,12 @@ export default function CTASection() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
-                href="/dashboard"
+              <button
+                onClick={handleGoogleSignIn}
                 className="px-8 py-4 rounded-full bg-brand-accent-blue hover:bg-brand-accent-blue/90 text-white font-semibold text-base flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
                 Get Started <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
               <a
                 href="#how-it-works"
                 className="px-8 py-4 rounded-full border border-zinc-200 text-zinc-700 hover:text-brand-accent-blue hover:border-brand-accent-blue/30 font-medium text-base flex items-center gap-2 transition-all bg-white hover:bg-zinc-50"

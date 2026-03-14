@@ -4,11 +4,16 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,7 +61,10 @@ export default function Navbar() {
 
           {/* CTA & Mobile Toggle */}
           <div className="flex items-center gap-4">
-            <button className="hidden md:flex relative items-center justify-center px-6 py-2 text-sm font-semibold text-white transition-all rounded-full overflow-hidden group bg-brand-accent-blue hover:bg-brand-accent-blue/90 border border-brand-accent-blue/20 shadow-lg hover:shadow-xl">
+            <button
+              onClick={handleGoogleSignIn}
+              className="hidden md:flex relative items-center justify-center px-6 py-2 text-sm font-semibold text-white transition-all rounded-full overflow-hidden group bg-brand-accent-blue hover:bg-brand-accent-blue/90 border border-brand-accent-blue/20 shadow-lg hover:shadow-xl"
+            >
               <span className="absolute inset-0 w-full h-full bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
               Get Started
             </button>
@@ -93,8 +101,11 @@ export default function Navbar() {
               <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="text-zinc-600 hover:text-brand-accent-blue">Features</Link>
               <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-zinc-600 hover:text-brand-accent-blue">How It Works</Link>
               <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-zinc-600 hover:text-brand-accent-blue">Pricing</Link>
-              <button className="mt-8 px-6 py-4 rounded-xl bg-brand-accent-blue font-semibold text-white shadow-lg text-lg">
-                Get Early Access
+              <button
+                onClick={handleGoogleSignIn}
+                className="mt-8 px-6 py-4 rounded-xl bg-brand-accent-blue font-semibold text-white shadow-lg text-lg"
+              >
+                Get Started
               </button>
             </div>
           </motion.div>
