@@ -27,15 +27,19 @@ class MessagingServicer(messaging_pb2_grpc.MessagingServiceServicer):
             history_tuples.append((text, from_me, ts))
 
         try:
-            success, reply_text = asyncio.run(
-                process_message(
-                    user_id=user_id,
-                    jid=jid,
-                    incoming_text=incoming_text,
-                    conversation_history=history_tuples,
-                    tone_id=tone_id,
+            loop = asyncio.new_event_loop()
+            try:
+                success, reply_text = loop.run_until_complete(
+                    process_message(
+                        user_id=user_id,
+                        jid=jid,
+                        incoming_text=incoming_text,
+                        conversation_history=history_tuples,
+                        tone_id=tone_id,
+                    )
                 )
-            )
+            finally:
+                loop.close()
             return messaging_pb2.ProcessMessageResponse(
                 success=success,
                 reply_text=reply_text or "",

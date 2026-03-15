@@ -51,7 +51,14 @@ async def process_message(
         user_content_parts.append("Relevant knowledge from your documents:")
         user_content_parts.append("\n\n".join(knowledge_chunks))
         user_content_parts.append("")
-    user_content_parts.append("Reply as the user's proxy to the latest message. Keep your reply concise and in line with the conversation and tone.")
+    user_content_parts.append(
+        "Reply as the user's proxy to the LATEST [Contact] message above. Rules:\n"
+        "- Match the language and script the contact is using (e.g. if they write in Hindi/Hinglish, reply in the same).\n"
+        "- Do NOT repeat or rephrase your previous replies. Each response must be fresh and directly address what the contact just said.\n"
+        "- Keep it concise, natural, and human — like a real chat reply, not a paragraph.\n"
+        "- If the contact sounds upset, worried, or emotional, respond with appropriate care and concern.\n"
+        "- Output ONLY the reply text, nothing else."
+    )
 
     user_content = "\n".join(user_content_parts)
 
