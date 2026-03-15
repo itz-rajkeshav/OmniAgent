@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import P from "pino";
 import { syncHistory } from "./historySync.js";
 import { messageHandler } from "./message.js";
+import { syncContacts } from "./contactSync.js";
 import {
   saveAccount,
   updateAccountStatus,
@@ -275,6 +276,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
         try {
           syncHistory(sock, sessionUserId);
           messageHandler(sock, sessionUserId);
+          syncContacts(sock, sessionUserId);
           logger.info(`[${sessionUserId}] Handlers initialized`);
         } catch (error) {
           logger.error(

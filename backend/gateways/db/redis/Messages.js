@@ -5,6 +5,24 @@ const JIDS_KEY_PREFIX = "message_jids:";
 const AGENT_MODE_PREFIX = "agent_mode:";
 const AGENT_TONE_PREFIX = "agent_tone:";
 const BLOCKED_JIDS_PREFIX = "blocked_jids:";
+const CONTACTS_PREFIX = "contacts:";
+const LAST_ACTIVITY_PREFIX = "last_activity:";
+
+/**
+ * Baileys messageTimestamp can be a plain number OR a protobuf Long object
+ * ({ low, high, unsigned }). This normalises either to milliseconds.
+ */
+export function normalizeTimestampMs(ts) {
+  if (ts == null) return 0;
+  let n;
+  if (typeof ts === "object" && ts !== null && "low" in ts) {
+    n = (ts.high >>> 0) * 0x100000000 + (ts.low >>> 0);
+  } else {
+    n = Number(ts);
+  }
+  if (!n || Number.isNaN(n) || n <= 0) return 0;
+  return n < 1e12 ? n * 1000 : n;
+}
 
 const PROFESSIONAL_MAX_PER_CONVO = 10;
 const DEFAULT_TONE_ID = "casual_friendly";
@@ -152,4 +170,77 @@ export async function getMessages(userId) {
     out.push(...msgs);
   }
   return out.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+}
+
+function contactsKey(userId) {
+  return `${CONTACTS_PREFIX}${userId}`;
+}
+
+export async function upsertContacts(userId, contacts) {
+  if (!userId || !Array.isArray(contacts) || contacts.length === 0) return;
+  const key = contactsKey(userId);
+  const pipeline = redisClient.pipeline();
+  for (const c of contacts) {
+    const jid = c.id;
+    const name = c.notify || c.verifiedName || c.name || null;
+    if (jid && name) {
+      pipeline.hset(key, jid, name);
+    }
+  }
+  await pipeline.exec();
+}
+
+export async function getContactName(userId, jid) {
+  if (!userId || !jid) return null;
+  return redisClient.hget(contactsKey(userId), jid);
+}
+
+export async function saveContactName(userId, jid, name) {
+  if (!userId || !jid || !name) return;
+  const existing = await redisClient.hget(contactsKey(userId), jid);
+  if (!existing) {
+    await redisClient.hset(contactsKey(userId), jid, name);
+  }
+}
+
+export async function getAllContacts(userId) {
+  if (!userId) return {};
+  return redisClient.hgetall(contactsKey(userId)) || {};
+}
+
+function lastActivityKey(userId) {
+  return `${LAST_ACTIVITY_PREFIX}${userId}`;
+}
+
+export async function updateLastActivity(userId, jid, rawTimestamp) {
+  if (!userId || !jid) return;
+  const ms = normalizeTimestampMs(rawTimestamp);
+  if (ms <= 0) return;
+  const key = lastActivityKey(userId);
+  const existing = Number(await redisClient.hget(key, jid)) || 0;
+  if (ms > existing) {
+    await redisClient.hset(key, jid, String(ms));
+  }
+}
+
+export async function bulkUpdateLastActivity(userId, entries) {
+  if (!userId || !Array.isArray(entries) || entries.length === 0) return;
+  const key = lastActivityKey(userId);
+  const existing = (await redisClient.hgetall(key)) || {};
+  const pipeline = redisClient.pipeline();
+  for (const { jid, timestamp } of entries) {
+    if (!jid) continue;
+    const ms = normalizeTimestampMs(timestamp);
+    if (ms <= 0) continue;
+    const prev = Number(existing[jid]) || 0;
+    if (ms > prev) {
+      pipeline.hset(key, jid, String(ms));
+    }
+  }
+  await pipeline.exec();
+}
+
+export async function getAllLastActivities(userId) {
+  if (!userId) return {};
+  return (await redisClient.hgetall(lastActivityKey(userId))) || {};
 }

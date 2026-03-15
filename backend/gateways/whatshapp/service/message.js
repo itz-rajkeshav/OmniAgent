@@ -1,17 +1,30 @@
-import { addMessage, isJidBlocked } from "../../db/redis/Messages.js";
+import {
+  addMessage,
+  isJidBlocked,
+  saveContactName,
+  updateLastActivity,
+  normalizeTimestampMs,
+} from "../../db/redis/Messages.js";
 
 export function messageHandler(sock, userId) {
   if (!sock?.ev) return;
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
-    // "notify" = new messages after WhatsApp connect (casual/live messages)
     if (type === "notify") {
       for (const msg of messages) {
         if (!msg?.key) continue;
 
         const jid = msg.key.remoteJid;
         const fromMe = msg.key.fromMe;
-        const timestamp = msg.messageTimestamp;
+        const timestamp = normalizeTimestampMs(msg.messageTimestamp);
+
+        if (msg.pushName && jid && !fromMe) {
+          saveContactName(userId, jid, msg.pushName).catch(() => {});
+        }
+
+        if (jid && timestamp > 0) {
+          updateLastActivity(userId, jid, timestamp).catch(() => {});
+        }
 
         const text =
           msg.message?.conversation ||
