@@ -2,6 +2,8 @@ import grpc
 import logging
 from concurrent import futures
 from rpc.generated import omniagent_pb2, omniagent_pb2_grpc
+from rpc.generated import messaging_pb2_grpc
+from messaging.service import MessagingServicer
 from db.supabase.connectDB import get_db_session
 from db.supabase.crud.WhatshappAccount_crud import (
     create_whatshapp_account,
@@ -188,6 +190,7 @@ def serve() -> grpc.Server:
         ],
     )
     omniagent_pb2_grpc.add_WhatsappServiceServicer_to_server(WhatsappServicer(), server)
+    messaging_pb2_grpc.add_MessagingServiceServicer_to_server(MessagingServicer(), server)
     server.add_insecure_port(f"0.0.0.0:{GRPC_PORT}")
     server.start()
     logger.info(f"gRPC server listening on port {GRPC_PORT}")

@@ -4,7 +4,8 @@ from groq import Groq
 
 from ai.tones import get_tone_prompt
 
-Groq_Apikey = os.getenv("GROK_APIKEY")
+# Support both standard Groq env (GROQ_API_KEY) and legacy GROK_APIKEY
+Groq_Apikey = os.getenv("GROQ_API_KEY") or os.getenv("GROK_APIKEY")
 
 
 def _build_messages(user_content: str, tone_id: str | None = None):
@@ -25,7 +26,7 @@ async def call_groq(
     if not Groq_Apikey:
         return {
             "status": "error",
-            "message": "Groq API KEY is not set ",
+            "message": "AI service configuration error. Set GROQ_API_KEY (or GROK_APIKEY) in your environment.",
         }
     client = Groq(api_key=Groq_Apikey)
     messages = _build_messages(prompt, tone_id)

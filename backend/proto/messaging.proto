@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package omniagent.messaging;
+
+service MessagingService {
+  rpc ProcessMessage (ProcessMessageRequest) returns (ProcessMessageResponse);
+}
+
+message ChatMessage {
+  string text = 1;
+  bool from_me = 2;
+  int64 timestamp = 3;
+}
+
+message ProcessMessageRequest {
+  string user_id = 1;
+  string jid = 2;
+  string incoming_text = 3;
+  repeated ChatMessage conversation_history = 4;
+  string tone_id = 5;
+}
+
+message ProcessMessageResponse {
+  bool success = 1;
+  string reply_text = 2;
+  string error = 3;
+}

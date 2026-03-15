@@ -5,6 +5,7 @@ import {
   updateLastActivity,
   normalizeTimestampMs,
 } from "../../db/redis/Messages.js";
+import { handleIncomingMessage } from "../../messaging/processor.js";
 
 export function messageHandler(sock, userId) {
   if (!sock?.ev) return;
@@ -38,9 +39,20 @@ export function messageHandler(sock, userId) {
         const messageObj = { jid, fromMe, text, timestamp };
         console.log(`[${userId}] MESSAGE:`, messageObj);
 
-        addMessage(userId, jid, messageObj).catch((err) =>
-          console.error(`[${userId}] Redis save message:`, err.message),
-        );
+        addMessage(userId, jid, messageObj)
+          .then(() => {
+            if (!fromMe) {
+              handleIncomingMessage(sock, userId, jid, text).catch((err) =>
+                console.error(
+                  `[${userId}] Agent reply error (jid=${jid}):`,
+                  err?.message || err,
+                ),
+              );
+            }
+          })
+          .catch((err) =>
+            console.error(`[${userId}] Redis save message:`, err.message),
+          );
       }
     }
   });
