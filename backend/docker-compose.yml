@@ -4,8 +4,8 @@ services:
   redis:
     image: redis:7
     container_name: omniagent-redis
-    # ports:
-    #   - "6379:6379"
+    ports:
+      - "6379:6379"
     restart: unless-stopped
 
   agent-core:
