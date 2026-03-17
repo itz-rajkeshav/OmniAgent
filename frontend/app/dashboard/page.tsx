@@ -12,6 +12,8 @@ export default async function DashboardPage() {
   }
 
   const userFirstname = session.user.name?.split(" ")[0] || "there";
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <div className="min-h-screen bg-zinc-50/50 font-sans flex flex-col md:flex-row">
@@ -89,20 +91,11 @@ export default async function DashboardPage() {
             </div>
             <div className="relative z-10">
               <h1 className="font-outfit text-3xl md:text-4xl font-bold text-zinc-900 mb-3">
-                Welcome back, {userFirstname}!
+                {greeting}, {userFirstname}!
               </h1>
               <p className="text-zinc-600 text-lg max-w-2xl mb-6">
                 Your AI agent is currently offline. Connect a gateway like WhatsApp to start automating your conversations immediately.
               </p>
-              <div className="flex flex-wrap gap-4">
-                  <button className="bg-brand-accent-blue hover:bg-brand-accent-blue/90 text-white px-5 py-2.5 rounded-full font-medium shadow-lg shadow-brand-accent-blue/20 transition-all flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Quick Setup Guide
-                  </button>
-                  <button className="bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-700 px-5 py-2.5 rounded-full font-medium shadow-sm transition-all">
-                      View Documentation
-                  </button>
-              </div>
             </div>
           </div>
 
@@ -199,7 +192,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Activity Placeholder */}
-          <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
+          {/* <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
              <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
                  <h2 className="font-outfit font-semibold text-zinc-900">Recent Activity</h2>
                  <button className="text-sm text-zinc-500 hover:text-brand-accent-blue transition-colors">View All</button>
@@ -211,7 +204,7 @@ export default async function DashboardPage() {
                  <h3 className="text-zinc-900 font-medium mb-1">No activity yet</h3>
                  <p className="text-zinc-500 text-sm max-w-sm">Connect a gateway like WhatsApp to start seeing agent interactions and message logs here.</p>
              </div>
-          </div>
+          </div> */}
 
         </main>
       </div>
