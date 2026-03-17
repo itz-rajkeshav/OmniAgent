@@ -9,15 +9,30 @@ import {
   RefreshCw,
   CheckCircle2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { GATEWAY_URL } from "@/lib/constants";
 
-export default function WhatsappConnectView({ userId }: { userId: string }) {
+export default function WhatsappConnectView({
+  userId,
+  isConnected = false,
+}: {
+  userId: string;
+  isConnected?: boolean;
+}) {
   const router = useRouter();
-  const [status, setStatus] = useState<string>("connecting");
+  const [status, setStatus] = useState<string>(
+    isConnected ? "connected" : "connecting",
+  );
   const [qrCode, setQrCode] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isConnected) {
+      setTimeout(() => {
+        router.push("/whatsapp-agent");
+      }, 2500);
+      return;
+    }
+
     let pollingInterval: NodeJS.Timeout;
 
     const checkStatus = async () => {
@@ -72,15 +87,71 @@ export default function WhatsappConnectView({ userId }: { userId: string }) {
   }, [userId, router]);
 
   // Framer motion variants
-  const botVariants = {
+  const botState =
+    status === "connected"
+      ? "connected"
+      : status === "qr_ready"
+        ? "scanning"
+        : "idle";
+
+  const botVariants: Variants = {
     idle: {
       y: [0, -10, 0],
+      rotate: [-1, 1, -1],
+      transition: { repeat: Infinity, duration: 4, ease: "easeInOut" },
+    },
+    scanning: {
+      y: [0, -5, 0],
+      x: [-5, 5, -5],
       transition: { repeat: Infinity, duration: 3, ease: "easeInOut" },
     },
-    jump: {
-      y: [0, -40, 0, -20, 0],
-      scale: [1, 1.1, 1, 1.05, 1],
+    connected: {
+      y: [0, -30, 0, -10, 0, -15, 0],
+      scale: [1, 1.05, 1, 1.02, 1, 1.03, 1],
+      rotate: [0, -5, 5, 0, -2, 2, 0],
+      transition: { duration: 1.5, ease: "easeOut" },
+    },
+  };
+
+  const eyeVariants: Variants = {
+    idle: {
+      scaleY: [1, 1, 0.1, 1, 1],
+      transition: {
+        repeat: Infinity,
+        duration: 3,
+        times: [0, 0.45, 0.5, 0.55, 1],
+      },
+    },
+    scanning: {
+      scaleY: [1, 1, 0.1, 1, 1],
+      x: [0, 8, 0, -8, 0],
+      transition: {
+        repeat: Infinity,
+        duration: 2.5,
+        times: [0, 0.45, 0.5, 0.55, 1],
+      },
+    },
+    connected: {
+      scaleY: [1, 1.4, 1.2, 1.3],
+      scaleX: [1, 1.2, 1.1, 1.15],
       transition: { duration: 1, ease: "easeOut" },
+    },
+  };
+
+  const mouthVariants: Variants = {
+    idle: {
+      scaleX: [1, 1.1, 1],
+      transition: { repeat: Infinity, duration: 4, ease: "easeInOut" },
+    },
+    scanning: {
+      scale: [1, 1.3, 1],
+      transition: { repeat: Infinity, duration: 1.2, ease: "easeInOut" },
+    },
+    connected: {
+      scaleX: [1, 1.5, 0.8, 1.2, 1],
+      scaleY: [1, 1.8, 0.7, 1.4, 1],
+      y: [0, -5, 8, -3, 0],
+      transition: { duration: 1.5, ease: "easeOut" },
     },
   };
 
@@ -114,98 +185,86 @@ export default function WhatsappConnectView({ userId }: { userId: string }) {
           {/* Left side: Instructions & Bot */}
           <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
             <div className="relative mb-10 w-full flex justify-center md:justify-start">
+              {/* Confetti effect for connected */}
+              {status === "connected" && (
+                <div className="absolute inset-0 pointer-events-none z-0 overflow-visible flex items-center justify-center">
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 1, x: 0, y: 0, scale: 0 }}
+                      animate={{
+                        opacity: [1, 1, 0],
+                        x: (Math.random() - 0.5) * 250,
+                        y: (Math.random() - 0.5) * -250 - 50,
+                        scale: [0, 1.5, 0.5],
+                        rotate: Math.random() * 360,
+                      }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className={`absolute w-3 h-3 rounded-sm ${
+                        [
+                          "bg-blue-500",
+                          "bg-green-500",
+                          "bg-yellow-500",
+                          "bg-rose-500",
+                        ][i % 4]
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
               {/* The Bot Animation */}
               <motion.div
                 variants={botVariants}
-                animate={status === "connected" ? "jump" : "idle"}
+                animate={botState}
                 className="w-48 h-48 relative z-10"
               >
+                {/* Robot Ears */}
+                <div className="absolute top-1/2 -left-3 w-4 h-12 bg-[#AEB9D1] rounded-l-2xl -translate-y-1/2"></div>
+                <div className="absolute top-1/2 -right-3 w-4 h-12 bg-[#AEB9D1] rounded-r-2xl -translate-y-1/2"></div>
+
                 {/* A detailed, playful robot */}
                 <div
-                  className={`w-full h-full rounded-3xl border-4 ${status === "connected" ? "border-[#25D366] bg-[#E8F5E9]" : "border-zinc-200 bg-white"} shadow-2xl flex flex-col items-center justify-center transition-colors duration-500 overflow-hidden relative group`}
+                  className={`w-full h-full rounded-[2.5rem] border-[6px] border-[#91A2FA] bg-[#F4F6FF] shadow-2xl flex flex-col items-center justify-center transition-colors duration-500 overflow-hidden relative group`}
                 >
-                  {/* Antenna Base */}
-                  <div className="absolute top-0 w-8 h-4 bg-zinc-300 rounded-b-lg"></div>
-                  {/* Antenna Line */}
-                  <div className="absolute top-0 w-1.5 h-10 bg-zinc-400 -mt-6">
-                    <div
-                      className={`absolute -top-3 -left-2 w-5 h-5 rounded-full shadow-lg ${status === "connected" ? "bg-[#25D366] animate-pulse shadow-[#25D366]" : "bg-rose-500 shadow-rose-500"}`}
-                    ></div>
-                  </div>
+                  {/* Top Bump */}
+                  <div className="absolute top-0 w-10 h-2.5 bg-[#AEB9D1] rounded-b-md"></div>
 
                   {/* Eyes Container */}
                   <div className="flex gap-6 mt-4 px-6 w-full justify-center">
-                    <div className="bg-zinc-800 w-10 h-12 rounded-full flex items-center justify-center shadow-inner overflow-hidden">
+                    <div className="bg-[#1C2833] w-12 h-14 rounded-full flex items-center justify-center shadow-inner overflow-hidden relative">
                       <motion.div
-                        animate={
-                          status === "connected"
-                            ? {
-                                scaleY: [1, 0.1, 1],
-                                scaleX: [1, 1.2, 1],
-                                transition: {
-                                  repeat: Infinity,
-                                  repeatDelay: 1.5,
-                                  duration: 0.3,
-                                },
-                              }
-                            : {
-                                scaleY: [1, 0.1, 1],
-                                transition: {
-                                  repeat: Infinity,
-                                  repeatDelay: 3.5,
-                                  duration: 0.15,
-                                },
-                              }
-                        }
-                        className={`w-6 h-8 rounded-full ${status === "connected" ? "bg-[#25D366]" : "bg-cyan-400"}`}
+                        variants={eyeVariants}
+                        animate={botState}
+                        className={`absolute w-8 h-10 rounded-full bg-[#00C2FF] translate-x-[-2px] translate-y-[-2px] shadow-[0_0_12px_#00C2FF]`}
                       />
                     </div>
-                    <div className="bg-zinc-800 w-10 h-12 rounded-full flex items-center justify-center shadow-inner overflow-hidden">
+                    <div className="bg-[#1C2833] w-12 h-14 rounded-full flex items-center justify-center shadow-inner overflow-hidden relative">
                       <motion.div
-                        animate={
-                          status === "connected"
-                            ? {
-                                scaleY: [1, 0.1, 1],
-                                scaleX: [1, 1.2, 1],
-                                transition: {
-                                  repeat: Infinity,
-                                  repeatDelay: 1.5,
-                                  duration: 0.3,
-                                },
-                              }
-                            : {
-                                scaleY: [1, 0.1, 1],
-                                transition: {
-                                  repeat: Infinity,
-                                  repeatDelay: 3.5,
-                                  duration: 0.15,
-                                },
-                              }
-                        }
-                        className={`w-6 h-8 rounded-full ${status === "connected" ? "bg-[#25D366]" : "bg-cyan-400"}`}
+                        variants={eyeVariants}
+                        animate={botState}
+                        className={`absolute w-8 h-10 rounded-full bg-[#00C2FF] translate-x-[-2px] translate-y-[-2px] shadow-[0_0_12px_#00C2FF]`}
                       />
                     </div>
                   </div>
 
                   {/* Cheeks */}
-                  <div
-                    className={`absolute left-4 top-24 w-4 h-2 rounded-full bg-rose-300 opacity-60 ${status === "connected" ? "block" : "hidden"}`}
-                  ></div>
-                  <div
-                    className={`absolute right-4 top-24 w-4 h-2 rounded-full bg-rose-300 opacity-60 ${status === "connected" ? "block" : "hidden"}`}
-                  ></div>
+                  <div className="absolute left-6 top-28 w-6 h-3 rounded-full bg-[#FF8DA1] opacity-90 block"></div>
+                  <div className="absolute right-6 top-28 w-6 h-3 rounded-full bg-[#FF8DA1] opacity-90 block"></div>
 
                   {/* Mouth */}
-                  <div
-                    className={`mt-6 transition-all duration-300 ${status === "connected" ? "w-16 h-8 border-b-8 border-[#25D366] rounded-full" : "w-10 h-1.5 bg-zinc-400 rounded-full"}`}
-                  ></div>
+                  <motion.div
+                    variants={mouthVariants}
+                    animate={botState}
+                    className={`mt-4 z-10 transition-all duration-300 ${status === "connected" ? "w-14 h-6 border-b-[6px] border-[#1C2833] rounded-full translate-y-[-5px]" : status === "qr_ready" ? "w-6 h-6 border-[5px] border-[#1C2833] rounded-full bg-transparent" : "w-8 h-2 bg-[#1C2833] rounded-full"}`}
+                  ></motion.div>
                 </div>
               </motion.div>
             </div>
 
             <h1 className="text-4xl lg:text-5xl font-bold text-[#111B21] mb-4 tracking-tight">
               {status === "connected"
-                ? "Successfully Connected!"
+                ? "Yay! We're connected! 🚀"
                 : "Connect your WhatsApp"}
             </h1>
             <p className="text-[#667781] text-lg mb-8 max-w-md leading-relaxed">

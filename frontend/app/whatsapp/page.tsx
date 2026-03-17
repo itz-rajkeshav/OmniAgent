@@ -14,6 +14,7 @@ export default async function WhatsappPage() {
   const userId = session.user.id;
 
   // Check the initial status on the server
+  let isConnected = false;
   try {
     const res = await fetch(
       `${GATEWAY_URL}/whatshapp/status?userId=${userId}`,
@@ -21,14 +22,13 @@ export default async function WhatsappPage() {
     );
     if (res.ok) {
       const data = await res.json();
-      // If they are already connected, immediately jump to the agent dashboard
       if (data.status === "connected") {
-        redirect("/whatsapp-agent");
+        isConnected = true;
       }
     }
   } catch (err) {
     console.error("Failed to check status", err);
   }
 
-  return <WhatsappConnectView userId={userId} />;
+  return <WhatsappConnectView userId={userId} isConnected={isConnected} />;
 }
