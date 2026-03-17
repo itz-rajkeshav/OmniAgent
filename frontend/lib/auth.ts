@@ -4,7 +4,7 @@ import { JWT } from "next-auth/jwt";
 
 interface UserSession extends Session {
     backendToken?: string;
-    user?: {
+    user: {
         id: string;
         email?: string | null;
         name?: string | null;
