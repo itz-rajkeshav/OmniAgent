@@ -23,6 +23,8 @@ import {
 } from "../../db/redis/Messages.js";
 
 const LOG_LEVEL = process.env.WA_LOG_LEVEL || "info";
+const DEFAULT_AGENT_MODE = "casual";
+const DEFAULT_AGENT_TONE = "casual_friendly";
 
 const logger = P({
   level: LOG_LEVEL,
@@ -243,8 +245,8 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
             logger.info(
               `[${sessionUserId}] gRPC SaveAccount: ${result.message}`,
             );
-            const agentMode = result.agent_mode || "casual";
-            const agentTone = result.agent_tone || "casual_friendly";
+            const agentMode = result.agent_mode || DEFAULT_AGENT_MODE;
+            const agentTone = result.agent_tone || DEFAULT_AGENT_TONE;
             await setAgentMode(sessionUserId, agentMode);
             await setAgentTone(sessionUserId, agentTone);
             logger.info(
@@ -254,8 +256,8 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
             logger.error(
               `[${sessionUserId}] gRPC SaveAccount returned failure: ${result?.message ?? "unknown"}`,
             );
-            await setAgentMode(sessionUserId, "casual");
-            await setAgentTone(sessionUserId, "casual_friendly");
+            await setAgentMode(sessionUserId, DEFAULT_AGENT_MODE);
+            await setAgentTone(sessionUserId, DEFAULT_AGENT_TONE);
           }
         } else {
           logger.warn(
@@ -263,11 +265,20 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
           );
         }
       } catch (err) {
-        const code = err.code ?? err.message;
-        const details = err.details ?? err.message;
         logger.error(
           `[${sessionUserId}] gRPC SaveAccount failed: ${err.message}`,
         );
+        try {
+          await setAgentMode(sessionUserId, DEFAULT_AGENT_MODE);
+          await setAgentTone(sessionUserId, DEFAULT_AGENT_TONE);
+          logger.info(
+            `[${sessionUserId}] Applied default agent mode and tone after gRPC failure`,
+          );
+        } catch (redisErr) {
+          logger.warn(
+            `[${sessionUserId}] Failed to set default agent mode/tone: ${redisErr.message}`,
+          );
+        }
       }
 
       if (!session.initialized) {

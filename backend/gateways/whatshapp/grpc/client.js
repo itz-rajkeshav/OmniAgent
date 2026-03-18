@@ -26,6 +26,25 @@ const WhatsappService = proto.omniagent.WhatsappService;
 const client = new WhatsappService(
   AGENT_CORE_GRPC_ADDR,
   grpc.credentials.createInsecure(),
+  {
+    "grpc.enable_retries": 1,
+    "grpc.service_config": JSON.stringify({
+      methodConfig: [
+        {
+          name: [{}],
+          retryPolicy: {
+            maxAttempts: 5,
+            initialBackoff: "1s",
+            maxBackoff: "10s",
+            backoffMultiplier: 2,
+            retryableStatusCodes: ["UNAVAILABLE"],
+          },
+        },
+      ],
+    }),
+    "grpc.keepalive_time_ms": 30000,
+    "grpc.keepalive_timeout_ms": 10000,
+  },
 );
 
 export function saveAccount(userId, phoneNumber, jid) {
