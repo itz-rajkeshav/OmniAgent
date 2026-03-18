@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   redis:
     image: redis:7
@@ -7,6 +5,12 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   agent-core:
     build: ./agent-core
@@ -23,6 +27,12 @@ services:
       - ./agent-core/.env
     environment:
       - USE_SYSTEM_CHROMIUM=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   gateways:
     build: ./gateways
@@ -33,8 +43,10 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     depends_on:
-      - agent-core
-      - redis
+      agent-core:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - AGENT_URL=http://agent-core:8000
       - AGENT_CORE_GRPC_ADDR=agent-core:50051
