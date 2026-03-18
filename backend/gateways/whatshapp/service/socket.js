@@ -190,6 +190,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
     logger,
     browser: ["Omni Agent", "Chrome", "1.0.0"],
     defaultQueryTimeoutMs: undefined,
+    shouldIgnoreJid: (jid) => jid === "status@broadcast",
   });
 
   sessions.set(sessionUserId, {

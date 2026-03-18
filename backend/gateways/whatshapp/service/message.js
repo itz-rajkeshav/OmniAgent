@@ -19,6 +19,10 @@ export function messageHandler(sock, userId) {
         const fromMe = msg.key.fromMe;
         const timestamp = normalizeTimestampMs(msg.messageTimestamp);
 
+        if (jid === "status@broadcast") {
+          continue;
+        }
+
         if (msg.pushName && jid && !fromMe) {
           saveContactName(userId, jid, msg.pushName).catch(() => {});
         }
