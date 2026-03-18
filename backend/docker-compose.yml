@@ -29,9 +29,6 @@ services:
     container_name: gateways
     ports:
       - "3000:3000"
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     depends_on:
       - agent-core
       - redis
