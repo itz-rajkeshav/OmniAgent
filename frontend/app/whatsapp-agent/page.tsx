@@ -1,79 +1,78 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, MessageCircle } from "lucide-react";
-import { GATEWAY_URL } from "@/lib/constants";
+import { MessageCircle, Activity, Users, Settings } from "lucide-react";
 
-export default async function WhatsappAgentPage() {
-  const session = await getServerSession(authOptions);
-
-  if (!session || !session.user) {
-    redirect("/");
-  }
-
-  // Double check that they are actually connected
-  const userId = session.user.id;
-  try {
-    const res = await fetch(
-      `${GATEWAY_URL}/whatshapp/status?userId=${userId}`,
-      { cache: "no-store" },
-    );
-    if (res.ok) {
-      const data = await res.json();
-      if (data.status !== "connected") {
-        redirect("/whatsapp");
-      }
-    }
-  } catch (err) {
-    console.error("Failed to verify connection status", err);
-  }
-
+export default function WhatsappAgentPage() {
   return (
-    <div className="min-h-screen bg-[#F7F8FA] font-sans">
-      <header className="bg-white border-b border-[#E9EDEF] sticky top-0 z-10 px-6 py-4 flex items-center justify-between shadow-sm">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 text-[#667781] hover:text-[#111B21] transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-semibold">Dashboard</span>
-        </Link>
-        <div className="flex items-center gap-2">
+    <div className="max-w-5xl mx-auto space-y-8">
+      {/* Welcome Section */}
+      <div className="bg-white rounded-2xl p-8 border border-[#E9EDEF] shadow-sm flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold font-outfit text-[#111B21] mb-2 tracking-tight">
+            Dashboard Overview
+          </h1>
+          <p className="text-[#667781] text-lg">
+            Monitor your WhatsApp agent&apos;s active status and quick metrics.
+          </p>
+        </div>
+        <div className="w-16 h-16 bg-[#25D366]/10 rounded-2xl flex items-center justify-center shadow-inner">
           <MessageCircle
-            className="w-6 h-6 text-[#25D366]"
+            className="w-8 h-8 text-[#25D366]"
             fill="#25D366"
             stroke="white"
           />
-          <span className="font-bold text-[#111B21] text-lg">
-            Agent Control Panel
-          </span>
         </div>
-        <div className="w-24"></div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 lg:px-8 py-16">
-        <div className="bg-white rounded-[2rem] p-16 border border-[#E9EDEF] text-center max-w-4xl mx-auto shadow-xl">
-          <div className="w-24 h-24 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-            <MessageCircle
-              className="w-12 h-12 text-[#25D366]"
-              fill="#25D366"
-              stroke="white"
-            />
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Stat Card 1 */}
+        <div className="bg-white p-6 rounded-2xl border border-[#E9EDEF] shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+              <Activity className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-[#54656F]">Messages Sent</h3>
           </div>
-          <h1 className="text-4xl font-bold font-outfit text-[#111B21] mb-6 tracking-tight">
-            WhatsApp Agent Active!
-          </h1>
-          <p className="text-[#667781] text-xl mb-12 max-w-xl mx-auto leading-relaxed">
-            Your agent is currently securely connected to WhatsApp. The full
-            chat configuration and mode-switching panel is coming soon.
-          </p>
-
-          <button className="bg-[#128C7E] hover:bg-[#075E54] text-white px-8 py-3.5 rounded-full font-bold shadow-lg transition-colors duration-300">
-            Configure Agent Tone
-          </button>
+          <p className="text-3xl font-bold text-[#111B21]">0</p>
         </div>
-      </main>
+
+        {/* Stat Card 2 */}
+        <div className="bg-white p-6 rounded-2xl border border-[#E9EDEF] shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
+              <Users className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-[#54656F]">
+              Active Conversations
+            </h3>
+          </div>
+          <p className="text-3xl font-bold text-[#111B21]">0</p>
+        </div>
+
+        {/* Stat Card 3 */}
+        <div className="bg-white p-6 rounded-2xl border border-[#E9EDEF] shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+              <Settings className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-[#54656F]">Agent Handled</h3>
+          </div>
+          <p className="text-3xl font-bold text-[#111B21]">0%</p>
+        </div>
+      </div>
+
+      {/* Quick Action */}
+      <div className="bg-white rounded-2xl p-8 border border-[#E9EDEF] shadow-sm text-center">
+        <h2 className="text-2xl font-bold text-[#111B21] mb-4">
+          Ready to configure your Agent?
+        </h2>
+        <p className="text-[#667781] mb-8 max-w-lg mx-auto">
+          Your agent is currently securely connected. Customize its knowledge
+          base, working time, and tone from the menu on the left.
+        </p>
+        <button className="bg-[#128C7E] hover:bg-[#075E54] text-white px-8 py-3 rounded-full font-bold shadow-lg transition-colors duration-300">
+          Get Started
+        </button>
+      </div>
     </div>
   );
 }
