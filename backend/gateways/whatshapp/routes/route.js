@@ -89,8 +89,6 @@ router.get(["/qr", "/qr/:userId"], async (req, res) => {
   });
 });
 
-
-
 router.post("/disconnect", express.json(), async (req, res) => {
   const userId = getUserId(req);
   if (!userId || userId === "default_user") {
@@ -143,16 +141,18 @@ router.get(["/chats", "/chats/:userId"], async (req, res) => {
       getAllContacts(userId),
       getAllLastActivities(userId),
     ]);
-    const recentWithMeta = [];
-    const now = Date.now();
-    for (const jid of recentJids) {
+    const groupsByJid = new Map(groups.map((group) => [group.jid, group]));
+
+    function toChatMeta(jid) {
       const lastTs = Number(activityMap[jid]) || 0;
+      const now = Date.now();
       const withinLastMonth =
         lastTs > 0 && lastTs <= now && now - lastTs <= ONE_MONTH_MS;
       const phoneNumber = jid.split("@")[0] || jid;
       const contactName =
-        contactsMap[jid] || groups.find((x) => x.jid === jid)?.name || null;
-      recentWithMeta.push({
+        contactsMap[jid] || groupsByJid.get(jid)?.name || null;
+
+      return {
         jid,
         isGroup: isGroupJid(jid),
         name: contactName || phoneNumber,
@@ -160,14 +160,34 @@ router.get(["/chats", "/chats/:userId"], async (req, res) => {
         contactName,
         lastActivity: lastTs || null,
         withinLastMonth,
-      });
+      };
     }
+
+    const recentWithMeta = [];
+    for (const jid of recentJids) {
+      recentWithMeta.push(toChatMeta(jid));
+    }
+
+    const contactEntries = Object.entries(contactsMap || {});
+    const allContacts = contactEntries
+      .map(([jid, contactValue]) => {
+        if (isGroupJid(jid)) return null;
+        const item = toChatMeta(jid);
+        return {
+          ...item,
+          name: contactValue || item.name,
+          contactName: contactValue || item.contactName,
+        };
+      })
+      .filter(Boolean);
 
     res.json({
       success: true,
       userId,
       groups,
       recentChats: recentWithMeta,
+      allContacts,
+      contacts: contactsMap || {},
     });
   } catch (err) {
     res.status(500).json({
