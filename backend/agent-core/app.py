@@ -8,6 +8,7 @@ from knowledge_based.website.routes.route import router as website_router
 from db.supabase.connectDB import init_db
 from knowledge_based.pdf.router.router import router as pdf_router
 from db.supabase.auth.route import router as auth_router
+from db.supabase.route import router as supabase_router
 from rpc.server import serve as grpc_serve, stop as grpc_stop
 
 logger = logging.getLogger(__name__)
@@ -49,3 +50,4 @@ def read_root():
 app.include_router(website_router, prefix="/website")
 app.include_router(pdf_router, prefix="/pdf")
 app.include_router(auth_router)
+app.include_router(supabase_router, prefix="/supabase")
