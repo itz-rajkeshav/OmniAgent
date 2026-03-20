@@ -47,9 +47,9 @@ def search_knowledge(user_id: str, query_text: str, top_k: int = 5) -> list[str]
         model = _get_model()
         query_vector = model.encode(query_text.strip()).tolist()
 
-        hits = qdrant_client.search(
+        query_response = qdrant_client.query_points(
             collection_name=collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=Filter(
                 must=[
                     FieldCondition(key="user_id", match=MatchValue(value=user_id)),
@@ -57,6 +57,8 @@ def search_knowledge(user_id: str, query_text: str, top_k: int = 5) -> list[str]
             ),
             limit=top_k,
         )
+
+        hits = getattr(query_response, "points", [])
 
         chunks = []
         for h in hits:
