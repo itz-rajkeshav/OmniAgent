@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { UserX, Users, MessageCircle, Search, ShieldAlert, Loader2, CheckCircle2, Contact } from "lucide-react";
+import { UserX, Users, Search, ShieldAlert, Loader2, CheckCircle2, Contact } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GATEWAY_URL } from "@/lib/constants";
 
@@ -15,7 +15,7 @@ type Chat = {
 };
 
 export function BlockedContactsClient({ userId }: { userId: string }) {
-  const [recentChats, setRecentChats] = useState<Chat[]>([]);
+
   const [allContacts, setAllContacts] = useState<Chat[]>([]);
   const [groups, setGroups] = useState<Chat[]>([]);
   
@@ -25,7 +25,7 @@ export function BlockedContactsClient({ userId }: { userId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"recent" | "contacts" | "groups">("recent");
+  const [activeTab, setActiveTab] = useState<"contacts" | "groups">("contacts");
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -41,7 +41,6 @@ export function BlockedContactsClient({ userId }: { userId: string }) {
         const blockedData = await blockedRes.json();
 
         if (chatsData.success) {
-          setRecentChats(chatsData.recentChats || []);
           setAllContacts(chatsData.allContacts || []);
           setGroups(chatsData.groups || []);
         }
@@ -118,8 +117,7 @@ export function BlockedContactsClient({ userId }: { userId: string }) {
 
   const filteredItems = useMemo(() => {
     let list: Chat[] = [];
-    if (activeTab === "recent") list = recentChats;
-    else if (activeTab === "contacts") list = allContacts;
+    if (activeTab === "contacts") list = allContacts;
     else if (activeTab === "groups") list = groups;
 
     if (searchTerm) {
@@ -139,7 +137,7 @@ export function BlockedContactsClient({ userId }: { userId: string }) {
       // Secondary sort alphabetically if both are the same state
       return (a.name || "").localeCompare(b.name || "");
     });
-  }, [activeTab, recentChats, allContacts, groups, searchTerm, blockedJids]);
+  }, [activeTab, allContacts, groups, searchTerm, blockedJids]);
 
   // Merge the items with uniqueness on JID in case of overlap
   const uniqueItems = useMemo(() => {
@@ -225,13 +223,6 @@ export function BlockedContactsClient({ userId }: { userId: string }) {
           </div>
           
           <div className="flex bg-[#F0F2F5] p-1.5 rounded-xl self-start md:self-auto overflow-x-auto max-w-full hide-scrollbar">
-            <button
-              onClick={() => setActiveTab("recent")}
-              className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold transition-all whitespace-nowrap ${activeTab === "recent" ? "bg-white text-[#111B21] shadow-sm tracking-tight" : "text-[#667781] hover:text-[#111B21] tracking-tight"}`}
-            >
-              <MessageCircle className="w-4 h-4" />
-              Recent Chats
-            </button>
             <button
               onClick={() => setActiveTab("contacts")}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold transition-all whitespace-nowrap ${activeTab === "contacts" ? "bg-white text-[#111B21] shadow-sm tracking-tight" : "text-[#667781] hover:text-[#111B21] tracking-tight"}`}
