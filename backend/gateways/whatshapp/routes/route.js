@@ -14,6 +14,8 @@ import {
   removeBlockedJid,
   getAllContacts,
   getAllLastActivities,
+  setAgentTone,
+  getAgentTone,
 } from "../../db/redis/Messages.js";
 import { isGroupJid } from "../utils/jid.js";
 
@@ -272,5 +274,47 @@ router.get(
     }
   },
 );
+
+router.post("/set-agent-tone/:userId", express.json(), async (req, res) => {
+  const userId = getUserId(req);
+  const tone = req.body?.tone;
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+  if (!tone || typeof tone !== "string") {
+    return res
+      .status(400)
+      .json({ success: false, message: "tone is required" });
+  }
+  try {
+    await setAgentTone(userId, tone);
+    res.json({ success: true, message: "Agent tone set", tone });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to set agent tone",
+    });
+  }
+});
+
+router.get("/get-agent-tone/:userId", async (req, res) => {
+  const userId = getUserId(req);
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+  try {
+    const tone = await getAgentTone(userId);
+    res.json({ success: true, userId, tone });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to get agent tone",
+    });
+  }
+});
 
 export default router;
