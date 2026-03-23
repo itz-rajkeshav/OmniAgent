@@ -17,6 +17,7 @@ import {
   setAgentTone,
   getAgentTone,
 } from "../../db/redis/Messages.js";
+import { updateAgentTone } from "../grpc/client.js";
 import { isGroupJid } from "../utils/jid.js";
 
 const router = express.Router();
@@ -289,8 +290,15 @@ router.post("/set-agent-tone/:userId", express.json(), async (req, res) => {
       .json({ success: false, message: "tone is required" });
   }
   try {
+    const grpcResult = await updateAgentTone(userId, tone);
+    if (!grpcResult?.success) {
+      return res.status(400).json({
+        success: false,
+        message: grpcResult?.message || "Failed to update agent tone in database",
+      });
+    }
     await setAgentTone(userId, tone);
-    res.json({ success: true, message: "Agent tone set", tone });
+    res.json({ success: true, message: grpcResult.message, tone: grpcResult.agent_tone || tone });
   } catch (err) {
     res.status(500).json({
       success: false,
