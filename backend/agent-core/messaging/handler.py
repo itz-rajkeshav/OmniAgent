@@ -53,7 +53,9 @@ async def process_message(
         user_content_parts.append("")
     user_content_parts.append(
         "Reply as the user's proxy to the LATEST [Contact] message above. Rules:\n"
-        "- Match the language and script the contact is using (e.g. if they write in Hindi/Hinglish, reply in the same).\n"
+        "- LANGUAGE: Reply in the SAME language as the contact's LATEST message. "
+        "If their latest message is in English, you MUST reply in English — do NOT continue in any previous language. "
+        "If they explicitly ask for a specific language, use that language.\n"
         "- Do NOT repeat or rephrase your previous replies. Each response must be fresh and directly address what the contact just said.\n"
         "- Keep it concise, natural, and human — like a real chat reply, not a paragraph.\n"
         "- If the contact sounds upset, worried, or emotional, respond with appropriate care and concern.\n"
