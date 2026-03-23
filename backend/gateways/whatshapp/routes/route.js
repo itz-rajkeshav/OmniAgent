@@ -16,8 +16,9 @@ import {
   getAllLastActivities,
   setAgentTone,
   getAgentTone,
+  setAgentMode,
 } from "../../db/redis/Messages.js";
-import { updateAgentTone } from "../grpc/client.js";
+import { updateAgentTone, updateAgentMode } from "../grpc/client.js";
 import { isGroupJid } from "../utils/jid.js";
 
 const router = express.Router();
@@ -298,7 +299,17 @@ router.post("/set-agent-tone/:userId", express.json(), async (req, res) => {
       });
     }
     await setAgentTone(userId, tone);
-    res.json({ success: true, message: grpcResult.message, tone: grpcResult.agent_tone || tone });
+
+    const newMode = tone.startsWith("professional_") ? "professional" : "casual";
+    await updateAgentMode(userId, newMode);
+    await setAgentMode(userId, newMode);
+
+    res.json({
+      success: true,
+      message: grpcResult.message,
+      tone: grpcResult.agent_tone || tone,
+      agent_mode: newMode,
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
