@@ -76,14 +76,17 @@ export default function KnowledgeBasePage() {
     }
 
     try {
-      const res = await fetch(`${BACKEND_URL}/supabase/delete-userSource`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: session.user.id,
-          source_id: source.source_id,
-          source_title: source.name,
-        }),
+      const deleteEndpoint = source.type === "pdf"
+        ? `${BACKEND_URL}/pdf/embedding/delete`
+        : `${BACKEND_URL}/website/embedding/delete`;
+
+      const formData = new FormData();
+      formData.append("user_id", session.user.id);
+      formData.append("source_title", source.name);
+
+      const res = await fetch(deleteEndpoint, {
+        method: "POST",
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok || data.status === "error") {
@@ -154,8 +157,6 @@ export default function KnowledgeBasePage() {
       const res = await fetch(`${BACKEND_URL}/website/embedding/upsert`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // The backend expects url and user_id. 
-        // Max pages or crawling depth config logic can be added later if backend supports it.
         body: JSON.stringify({ 
           url: websiteUrl, 
           user_id: session.user.id 

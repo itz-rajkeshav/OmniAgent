@@ -1,9 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from ..embedding.embedding import embed_pdf
-from db.qdrant.qdrant_client import upsert_embedding
+from db.qdrant.qdrant_client import upsert_embedding, delete_user_file
 
 router = APIRouter()
-
+ 
 
 @router.post("/embedding")
 async def pdf_embed(file: UploadFile = File(...)):
@@ -47,6 +47,21 @@ async def pdf_embed_upsert(
         )
         if result.get("status") == "error":
             raise HTTPException(status_code=400, detail=result.get("message", "Upsert failed"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/embedding/delete")
+async def pdf_embed_delete(
+    user_id: str = Form(...),
+    source_title: str = Form(...),
+):
+    try:
+        result = delete_user_file(user_id, source_title)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result.get("message", "Delete failed"))
         return result
     except HTTPException:
         raise

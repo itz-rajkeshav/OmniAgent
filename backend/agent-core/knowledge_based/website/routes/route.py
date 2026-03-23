@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException,Form
 from pydantic import BaseModel
 from ..crawl.crawl import crawl_website
 from ..embedding.embed import embed_websiteText
-from db.qdrant.qdrant_client import upsert_embedding
+from db.qdrant.qdrant_client import upsert_embedding,delete_user_file
 import hashlib
 router = APIRouter()
 
@@ -106,4 +106,17 @@ async def crawl_only(request: CrawlRequest):
         raise HTTPException(status_code=500, detail=f"Crawl failed: {str(e)}")
 
 
-    
+@router.post("/embedding/delete")
+async def pdf_embed_delete(
+    user_id: str = Form(...),
+    source_title: str = Form(...),
+):
+    try:
+        result = delete_user_file(user_id, source_title)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result.get("message", "Delete failed"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
