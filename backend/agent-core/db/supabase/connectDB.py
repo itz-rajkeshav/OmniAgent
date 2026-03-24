@@ -35,4 +35,6 @@ def get_db_session():
 def init_db():
     if engine is None:
         return
+    from db.supabase.models import agent_schedule, userModel, whatshappAccount
+
     Base.metadata.create_all(bind=engine)
