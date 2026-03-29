@@ -9,6 +9,36 @@ service WhatsappService {
   rpc GetAccount (GetAccountRequest) returns (GetAccountResponse);
   rpc UpdateAgentMode (UpdateAgentModeRequest) returns (UpdateAgentModeResponse);
   rpc UpdateAgentTone (UpdateAgentToneRequest) returns (UpdateAgentToneResponse);
+  rpc UpdateAgentSchedule (UpdateAgentScheduleRequest) returns (UpdateAgentScheduleResponse);
+  rpc GetAgentSchedule (GetAgentScheduleRequest) returns (GetAgentScheduleResponse);
+}
+
+message ScheduleEntry {
+  int32  day        = 1;
+  string start_time = 2;
+  string end_time   = 3;
+  bool   is_enabled = 4;
+}
+
+message UpdateAgentScheduleRequest {
+  string user_id                 = 1;
+  repeated ScheduleEntry entries = 2;
+  string timezone                = 3;
+}
+
+message UpdateAgentScheduleResponse {
+  bool   success = 1;
+  string message = 2;
+}
+
+message GetAgentScheduleRequest {
+  string user_id = 1;
+}
+
+message GetAgentScheduleResponse {
+  bool   found                    = 1;
+  repeated ScheduleEntry entries  = 2;
+  string timezone                 = 3;
 }
 
 message SaveAccountRequest {

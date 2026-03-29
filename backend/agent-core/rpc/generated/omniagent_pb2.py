@@ -24,33 +24,43 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fomniagent.proto\x12\tomniagent\"H\n\x12SaveAccountRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"\x92\x01\n\x13SaveAccountResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\x12\x12\n\nagent_tone\x18\x07 \x01(\t\"C\n\x13UpdateStatusRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"\x93\x01\n\x14UpdateStatusResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\x12\x12\n\nagent_tone\x18\x07 \x01(\t\")\n\x11GetAccountRequest\x12\x14\n\x0cphone_number\x18\x01 \x01(\t\"\x8f\x01\n\x12GetAccountResponse\x12\r\n\x05\x66ound\x18\x01 \x01(\x08\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\x12\x12\n\nagent_tone\x18\x07 \x01(\t\"=\n\x16UpdateAgentModeRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nagent_mode\x18\x02 \x01(\t\"c\n\x17UpdateAgentModeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nagent_mode\x18\x03 \x01(\t\x12\x12\n\nagent_tone\x18\x04 \x01(\t\"=\n\x16UpdateAgentToneRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nagent_tone\x18\x02 \x01(\t\"O\n\x17UpdateAgentToneResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nagent_tone\x18\x03 \x01(\t2\xb6\x03\n\x0fWhatsappService\x12L\n\x0bSaveAccount\x12\x1d.omniagent.SaveAccountRequest\x1a\x1e.omniagent.SaveAccountResponse\x12V\n\x13UpdateAccountStatus\x12\x1e.omniagent.UpdateStatusRequest\x1a\x1f.omniagent.UpdateStatusResponse\x12I\n\nGetAccount\x12\x1c.omniagent.GetAccountRequest\x1a\x1d.omniagent.GetAccountResponse\x12X\n\x0fUpdateAgentMode\x12!.omniagent.UpdateAgentModeRequest\x1a\".omniagent.UpdateAgentModeResponse\x12X\n\x0fUpdateAgentTone\x12!.omniagent.UpdateAgentToneRequest\x1a\".omniagent.UpdateAgentToneResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fomniagent.proto\x12\tomniagent\"V\n\rScheduleEntry\x12\x0b\n\x03\x64\x61y\x18\x01 \x01(\x05\x12\x12\n\nstart_time\x18\x02 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x03 \x01(\t\x12\x12\n\nis_enabled\x18\x04 \x01(\x08\"j\n\x1aUpdateAgentScheduleRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12)\n\x07\x65ntries\x18\x02 \x03(\x0b\x32\x18.omniagent.ScheduleEntry\x12\x10\n\x08timezone\x18\x03 \x01(\t\"?\n\x1bUpdateAgentScheduleResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"*\n\x17GetAgentScheduleRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\"f\n\x18GetAgentScheduleResponse\x12\r\n\x05\x66ound\x18\x01 \x01(\x08\x12)\n\x07\x65ntries\x18\x02 \x03(\x0b\x32\x18.omniagent.ScheduleEntry\x12\x10\n\x08timezone\x18\x03 \x01(\t\"H\n\x12SaveAccountRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"\x92\x01\n\x13SaveAccountResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\x12\x12\n\nagent_tone\x18\x07 \x01(\t\"C\n\x13UpdateStatusRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0b\n\x03jid\x18\x03 \x01(\t\"\x93\x01\n\x14UpdateStatusResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\x12\x12\n\nagent_tone\x18\x07 \x01(\t\")\n\x11GetAccountRequest\x12\x14\n\x0cphone_number\x18\x01 \x01(\t\"\x8f\x01\n\x12GetAccountResponse\x12\r\n\x05\x66ound\x18\x01 \x01(\x08\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x14\n\x0cphone_number\x18\x03 \x01(\t\x12\x0b\n\x03jid\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nagent_mode\x18\x06 \x01(\t\x12\x12\n\nagent_tone\x18\x07 \x01(\t\"=\n\x16UpdateAgentModeRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nagent_mode\x18\x02 \x01(\t\"c\n\x17UpdateAgentModeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nagent_mode\x18\x03 \x01(\t\x12\x12\n\nagent_tone\x18\x04 \x01(\t\"=\n\x16UpdateAgentToneRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nagent_tone\x18\x02 \x01(\t\"O\n\x17UpdateAgentToneResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nagent_tone\x18\x03 \x01(\t2\xf9\x04\n\x0fWhatsappService\x12L\n\x0bSaveAccount\x12\x1d.omniagent.SaveAccountRequest\x1a\x1e.omniagent.SaveAccountResponse\x12V\n\x13UpdateAccountStatus\x12\x1e.omniagent.UpdateStatusRequest\x1a\x1f.omniagent.UpdateStatusResponse\x12I\n\nGetAccount\x12\x1c.omniagent.GetAccountRequest\x1a\x1d.omniagent.GetAccountResponse\x12X\n\x0fUpdateAgentMode\x12!.omniagent.UpdateAgentModeRequest\x1a\".omniagent.UpdateAgentModeResponse\x12X\n\x0fUpdateAgentTone\x12!.omniagent.UpdateAgentToneRequest\x1a\".omniagent.UpdateAgentToneResponse\x12\x64\n\x13UpdateAgentSchedule\x12%.omniagent.UpdateAgentScheduleRequest\x1a&.omniagent.UpdateAgentScheduleResponse\x12[\n\x10GetAgentSchedule\x12\".omniagent.GetAgentScheduleRequest\x1a#.omniagent.GetAgentScheduleResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'omniagent_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_SAVEACCOUNTREQUEST']._serialized_start=30
-  _globals['_SAVEACCOUNTREQUEST']._serialized_end=102
-  _globals['_SAVEACCOUNTRESPONSE']._serialized_start=105
-  _globals['_SAVEACCOUNTRESPONSE']._serialized_end=251
-  _globals['_UPDATESTATUSREQUEST']._serialized_start=253
-  _globals['_UPDATESTATUSREQUEST']._serialized_end=320
-  _globals['_UPDATESTATUSRESPONSE']._serialized_start=323
-  _globals['_UPDATESTATUSRESPONSE']._serialized_end=470
-  _globals['_GETACCOUNTREQUEST']._serialized_start=472
-  _globals['_GETACCOUNTREQUEST']._serialized_end=513
-  _globals['_GETACCOUNTRESPONSE']._serialized_start=516
-  _globals['_GETACCOUNTRESPONSE']._serialized_end=659
-  _globals['_UPDATEAGENTMODEREQUEST']._serialized_start=661
-  _globals['_UPDATEAGENTMODEREQUEST']._serialized_end=722
-  _globals['_UPDATEAGENTMODERESPONSE']._serialized_start=724
-  _globals['_UPDATEAGENTMODERESPONSE']._serialized_end=823
-  _globals['_UPDATEAGENTTONEREQUEST']._serialized_start=825
-  _globals['_UPDATEAGENTTONEREQUEST']._serialized_end=886
-  _globals['_UPDATEAGENTTONERESPONSE']._serialized_start=888
-  _globals['_UPDATEAGENTTONERESPONSE']._serialized_end=967
-  _globals['_WHATSAPPSERVICE']._serialized_start=970
-  _globals['_WHATSAPPSERVICE']._serialized_end=1408
+  _globals['_SCHEDULEENTRY']._serialized_start=30
+  _globals['_SCHEDULEENTRY']._serialized_end=116
+  _globals['_UPDATEAGENTSCHEDULEREQUEST']._serialized_start=118
+  _globals['_UPDATEAGENTSCHEDULEREQUEST']._serialized_end=224
+  _globals['_UPDATEAGENTSCHEDULERESPONSE']._serialized_start=226
+  _globals['_UPDATEAGENTSCHEDULERESPONSE']._serialized_end=289
+  _globals['_GETAGENTSCHEDULEREQUEST']._serialized_start=291
+  _globals['_GETAGENTSCHEDULEREQUEST']._serialized_end=333
+  _globals['_GETAGENTSCHEDULERESPONSE']._serialized_start=335
+  _globals['_GETAGENTSCHEDULERESPONSE']._serialized_end=437
+  _globals['_SAVEACCOUNTREQUEST']._serialized_start=439
+  _globals['_SAVEACCOUNTREQUEST']._serialized_end=511
+  _globals['_SAVEACCOUNTRESPONSE']._serialized_start=514
+  _globals['_SAVEACCOUNTRESPONSE']._serialized_end=660
+  _globals['_UPDATESTATUSREQUEST']._serialized_start=662
+  _globals['_UPDATESTATUSREQUEST']._serialized_end=729
+  _globals['_UPDATESTATUSRESPONSE']._serialized_start=732
+  _globals['_UPDATESTATUSRESPONSE']._serialized_end=879
+  _globals['_GETACCOUNTREQUEST']._serialized_start=881
+  _globals['_GETACCOUNTREQUEST']._serialized_end=922
+  _globals['_GETACCOUNTRESPONSE']._serialized_start=925
+  _globals['_GETACCOUNTRESPONSE']._serialized_end=1068
+  _globals['_UPDATEAGENTMODEREQUEST']._serialized_start=1070
+  _globals['_UPDATEAGENTMODEREQUEST']._serialized_end=1131
+  _globals['_UPDATEAGENTMODERESPONSE']._serialized_start=1133
+  _globals['_UPDATEAGENTMODERESPONSE']._serialized_end=1232
+  _globals['_UPDATEAGENTTONEREQUEST']._serialized_start=1234
+  _globals['_UPDATEAGENTTONEREQUEST']._serialized_end=1295
+  _globals['_UPDATEAGENTTONERESPONSE']._serialized_start=1297
+  _globals['_UPDATEAGENTTONERESPONSE']._serialized_end=1376
+  _globals['_WHATSAPPSERVICE']._serialized_start=1379
+  _globals['_WHATSAPPSERVICE']._serialized_end=2012
 # @@protoc_insertion_point(module_scope)

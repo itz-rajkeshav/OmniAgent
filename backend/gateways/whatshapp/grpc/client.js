@@ -98,3 +98,30 @@ export function updateAgentTone(userId, agentTone) {
     );
   });
 }
+
+export function updateAgentSchedule(userId, entries, timezone) {
+  return new Promise((resolve, reject) => {
+    client.UpdateAgentSchedule(
+      { user_id: userId, entries: entries || [], timezone: timezone || "Asia/Kolkata" },
+      (err, response) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(response);
+      },
+    );
+  });
+}
+
+export function getAgentSchedule(userId) {
+  return new Promise((resolve, reject) => {
+    client.GetAgentSchedule({ user_id: userId }, (err, response) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(response);
+    });
+  });
+}

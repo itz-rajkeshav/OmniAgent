@@ -5,7 +5,7 @@ import warnings
 
 from rpc.generated import omniagent_pb2 as omniagent__pb2
 
-GRPC_GENERATED_VERSION = '1.78.0'
+GRPC_GENERATED_VERSION = '1.78.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -59,6 +59,16 @@ class WhatsappServiceStub(object):
                 request_serializer=omniagent__pb2.UpdateAgentToneRequest.SerializeToString,
                 response_deserializer=omniagent__pb2.UpdateAgentToneResponse.FromString,
                 _registered_method=True)
+        self.UpdateAgentSchedule = channel.unary_unary(
+                '/omniagent.WhatsappService/UpdateAgentSchedule',
+                request_serializer=omniagent__pb2.UpdateAgentScheduleRequest.SerializeToString,
+                response_deserializer=omniagent__pb2.UpdateAgentScheduleResponse.FromString,
+                _registered_method=True)
+        self.GetAgentSchedule = channel.unary_unary(
+                '/omniagent.WhatsappService/GetAgentSchedule',
+                request_serializer=omniagent__pb2.GetAgentScheduleRequest.SerializeToString,
+                response_deserializer=omniagent__pb2.GetAgentScheduleResponse.FromString,
+                _registered_method=True)
 
 
 class WhatsappServiceServicer(object):
@@ -94,6 +104,18 @@ class WhatsappServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateAgentSchedule(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetAgentSchedule(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_WhatsappServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -121,6 +143,16 @@ def add_WhatsappServiceServicer_to_server(servicer, server):
                     servicer.UpdateAgentTone,
                     request_deserializer=omniagent__pb2.UpdateAgentToneRequest.FromString,
                     response_serializer=omniagent__pb2.UpdateAgentToneResponse.SerializeToString,
+            ),
+            'UpdateAgentSchedule': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateAgentSchedule,
+                    request_deserializer=omniagent__pb2.UpdateAgentScheduleRequest.FromString,
+                    response_serializer=omniagent__pb2.UpdateAgentScheduleResponse.SerializeToString,
+            ),
+            'GetAgentSchedule': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAgentSchedule,
+                    request_deserializer=omniagent__pb2.GetAgentScheduleRequest.FromString,
+                    response_serializer=omniagent__pb2.GetAgentScheduleResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -258,6 +290,60 @@ class WhatsappService(object):
             '/omniagent.WhatsappService/UpdateAgentTone',
             omniagent__pb2.UpdateAgentToneRequest.SerializeToString,
             omniagent__pb2.UpdateAgentToneResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateAgentSchedule(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/omniagent.WhatsappService/UpdateAgentSchedule',
+            omniagent__pb2.UpdateAgentScheduleRequest.SerializeToString,
+            omniagent__pb2.UpdateAgentScheduleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetAgentSchedule(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/omniagent.WhatsappService/GetAgentSchedule',
+            omniagent__pb2.GetAgentScheduleRequest.SerializeToString,
+            omniagent__pb2.GetAgentScheduleResponse.FromString,
             options,
             channel_credentials,
             insecure,
