@@ -18,12 +18,18 @@ import {
   getAgentTone,
   setAgentMode,
 } from "../../db/redis/Messages.js";
-import { updateAgentTone, updateAgentMode } from "../grpc/client.js";
+import {
+  updateAgentTone,
+  updateAgentMode,
+  updateAgentSchedule,
+  getAgentSchedule,
+} from "../grpc/client.js";
 import { isGroupJid } from "../utils/jid.js";
 
 const router = express.Router();
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 function getUserId(req) {
   return (
@@ -332,6 +338,97 @@ router.get("/get-agent-tone/:userId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: err.message || "Failed to get agent tone",
+    });
+  }
+});
+
+router.post("/set-agent-schedule/:userId", express.json(), async (req, res) => {
+  const userId = getUserId(req);
+  const entries = req.body?.entries;
+  const timezone = (req.body?.timezone || "Asia/Kolkata").trim();
+
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "entries must be a non-empty array" });
+  }
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
+  } catch {
+    return res.status(400).json({ success: false, message: "invalid timezone" });
+  }
+
+  for (const entry of entries) {
+    const day = Number(entry?.day);
+    const startTime = entry?.start_time;
+    const endTime = entry?.end_time;
+    if (!Number.isInteger(day) || day < 0 || day > 6) {
+      return res
+        .status(400)
+        .json({ success: false, message: "entry.day must be an integer from 0 to 6" });
+    }
+    if (typeof startTime !== "string" || !TIME_RE.test(startTime)) {
+      return res.status(400).json({
+        success: false,
+        message: `entry.start_time must be HH:MM for day ${day}`,
+      });
+    }
+    if (typeof endTime !== "string" || !TIME_RE.test(endTime)) {
+      return res.status(400).json({
+        success: false,
+        message: `entry.end_time must be HH:MM for day ${day}`,
+      });
+    }
+  }
+
+  try {
+    const grpcResult = await updateAgentSchedule(userId, entries, timezone);
+    if (!grpcResult?.success) {
+      return res.status(400).json({
+        success: false,
+        message: grpcResult?.message || "Failed to update agent schedule",
+      });
+    }
+    res.json({
+      success: true,
+      message: grpcResult.message || "Schedule updated",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to set agent schedule",
+    });
+  }
+});
+
+router.get("/get-agent-schedule/:userId", async (req, res) => {
+  const userId = getUserId(req);
+  if (!userId || userId === "default_user") {
+    return res
+      .status(400)
+      .json({ success: false, message: "userId is required" });
+  }
+
+  try {
+    const grpcResult = await getAgentSchedule(userId);
+    if (!grpcResult?.found) {
+      return res.json({ success: true, found: false, entries: [], timezone: "" });
+    }
+    res.json({
+      success: true,
+      found: true,
+      entries: grpcResult.entries || [],
+      timezone: grpcResult.timezone || "Asia/Kolkata",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to get agent schedule",
     });
   }
 });
