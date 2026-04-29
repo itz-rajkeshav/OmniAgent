@@ -99,10 +99,10 @@ export function updateAgentTone(userId, agentTone) {
   });
 }
 
-export function updateAgentSchedule(userId, entries, timezone) {
+export function updateAgentSchedule(userId, entries) {
   return new Promise((resolve, reject) => {
     client.UpdateAgentSchedule(
-      { user_id: userId, entries: entries || [], timezone: timezone || "Asia/Kolkata" },
+      { user_id: userId, entries: entries || [] },
       (err, response) => {
         if (err) {
           reject(err);

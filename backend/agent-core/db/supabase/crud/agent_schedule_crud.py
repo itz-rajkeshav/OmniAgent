@@ -13,7 +13,6 @@ def upsert_agent_schedule(
     start_time: str,
     end_time: str,
     is_enabled: bool,
-    timezone: str = "Asia/Kolkata",
 ):
     """Insert or update a single day's schedule for a user."""
     if day < 0 or day > 6:
@@ -29,7 +28,6 @@ def upsert_agent_schedule(
         existing.start_time = start_time
         existing.end_time = end_time
         existing.is_enabled = is_enabled
-        existing.timezone = timezone
         existing.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(existing)
@@ -41,7 +39,6 @@ def upsert_agent_schedule(
             start_time=start_time,
             end_time=end_time,
             is_enabled=is_enabled,
-            timezone=timezone,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -55,7 +52,6 @@ def bulk_upsert_agent_schedule(
     db: Session,
     user_id: str,
     entries: list[dict],
-    timezone: str = "Asia/Kolkata",
 ):
     """
     Insert or update multiple day entries at once.
@@ -70,7 +66,6 @@ def bulk_upsert_agent_schedule(
             start_time=entry.get("start_time", "09:00"),
             end_time=entry.get("end_time", "18:00"),
             is_enabled=entry.get("is_enabled", True),
-            timezone=timezone,
         )
         results.append(result)
 
@@ -89,7 +84,7 @@ def get_agent_schedule(db: Session, user_id: str):
         .all()
     )
     if entries:
-        return {"status": "success", "entries": entries, "timezone": entries[0].timezone}
+        return {"status": "success", "entries": entries}
     return {"status": "error", "message": "No schedule found"}
 
 

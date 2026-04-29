@@ -301,12 +301,15 @@ router.post("/set-agent-tone/:userId", express.json(), async (req, res) => {
     if (!grpcResult?.success) {
       return res.status(400).json({
         success: false,
-        message: grpcResult?.message || "Failed to update agent tone in database",
+        message:
+          grpcResult?.message || "Failed to update agent tone in database",
       });
     }
     await setAgentTone(userId, tone);
 
-    const newMode = tone.startsWith("professional_") ? "professional" : "casual";
+    const newMode = tone.startsWith("professional_")
+      ? "professional"
+      : "casual";
     await updateAgentMode(userId, newMode);
     await setAgentMode(userId, newMode);
 
@@ -345,7 +348,6 @@ router.get("/get-agent-tone/:userId", async (req, res) => {
 router.post("/set-agent-schedule/:userId", express.json(), async (req, res) => {
   const userId = getUserId(req);
   const entries = req.body?.entries;
-  const timezone = (req.body?.timezone || "Asia/Kolkata").trim();
 
   if (!userId || userId === "default_user") {
     return res
@@ -357,11 +359,6 @@ router.post("/set-agent-schedule/:userId", express.json(), async (req, res) => {
       .status(400)
       .json({ success: false, message: "entries must be a non-empty array" });
   }
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
-  } catch {
-    return res.status(400).json({ success: false, message: "invalid timezone" });
-  }
 
   for (const entry of entries) {
     const day = Number(entry?.day);
@@ -370,7 +367,10 @@ router.post("/set-agent-schedule/:userId", express.json(), async (req, res) => {
     if (!Number.isInteger(day) || day < 0 || day > 6) {
       return res
         .status(400)
-        .json({ success: false, message: "entry.day must be an integer from 0 to 6" });
+        .json({
+          success: false,
+          message: "entry.day must be an integer from 0 to 6",
+        });
     }
     if (typeof startTime !== "string" || !TIME_RE.test(startTime)) {
       return res.status(400).json({
@@ -387,7 +387,7 @@ router.post("/set-agent-schedule/:userId", express.json(), async (req, res) => {
   }
 
   try {
-    const grpcResult = await updateAgentSchedule(userId, entries, timezone);
+    const grpcResult = await updateAgentSchedule(userId, entries);
     if (!grpcResult?.success) {
       return res.status(400).json({
         success: false,
@@ -417,13 +417,12 @@ router.get("/get-agent-schedule/:userId", async (req, res) => {
   try {
     const grpcResult = await getAgentSchedule(userId);
     if (!grpcResult?.found) {
-      return res.json({ success: true, found: false, entries: [], timezone: "" });
+      return res.json({ success: true, found: false, entries: [] });
     }
     res.json({
       success: true,
       found: true,
       entries: grpcResult.entries || [],
-      timezone: grpcResult.timezone || "Asia/Kolkata",
     });
   } catch (err) {
     res.status(500).json({

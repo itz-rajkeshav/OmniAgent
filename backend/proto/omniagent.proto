@@ -23,7 +23,6 @@ message ScheduleEntry {
 message UpdateAgentScheduleRequest {
   string user_id                 = 1;
   repeated ScheduleEntry entries = 2;
-  string timezone                = 3;
 }
 
 message UpdateAgentScheduleResponse {
@@ -36,9 +35,8 @@ message GetAgentScheduleRequest {
 }
 
 message GetAgentScheduleResponse {
-  bool   found                    = 1;
-  repeated ScheduleEntry entries  = 2;
-  string timezone                 = 3;
+  bool   found                   = 1;
+  repeated ScheduleEntry entries = 2;
 }
 
 message SaveAccountRequest {

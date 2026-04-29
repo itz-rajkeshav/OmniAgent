@@ -15,6 +15,5 @@ class AgentSchedule(Base):
     start_time = Column(String, nullable=False, default="09:00")
     end_time = Column(String, nullable=False, default="18:00")
     is_enabled = Column(Boolean, nullable=False, default=True)
-    timezone = Column(String, nullable=False, default="Asia/Kolkata")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
