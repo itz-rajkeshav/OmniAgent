@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from rpc.generated import omniagent_pb2 as omniagent__pb2
+from . import omniagent_pb2 as omniagent__pb2
 
 GRPC_GENERATED_VERSION = '1.78.1'
 GRPC_VERSION = grpc.__version__
