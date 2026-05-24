@@ -1,5 +1,6 @@
 import grpc
 import logging
+import re
 from concurrent import futures
 from rpc.generated import omniagent_pb2, omniagent_pb2_grpc
 from rpc.generated import messaging_pb2_grpc
@@ -14,11 +15,21 @@ from db.supabase.crud.WhatshappAccount_crud import (
     update_whatshapp_account_agent_mode,
     update_whatshapp_account_agent_tone,
 )
+from db.supabase.crud.agent_schedule_crud import (
+    bulk_upsert_agent_schedule,
+    get_agent_schedule,
+)
 from ai.tones import is_valid_tone
 
 logger = logging.getLogger(__name__)
 
 GRPC_PORT = 50051
+TIME_RE = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+VALID_DAYS = set(range(7))
+
+
+def _is_valid_time(value: str) -> bool:
+    return bool(TIME_RE.match(value or ""))
 
 
 class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
@@ -180,6 +191,83 @@ class WhatsappServicer(omniagent_pb2_grpc.WhatsappServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
             return omniagent_pb2.UpdateAgentToneResponse(success=False, message=str(e), agent_tone="")
+
+    def UpdateAgentSchedule(self, request: omniagent_pb2.UpdateAgentScheduleRequest, context):
+        logger.info(f"[UpdateAgentSchedule] user_id={request.user_id} entries={len(request.entries)}")
+
+        if not request.user_id:
+            return omniagent_pb2.UpdateAgentScheduleResponse(success=False, message="user_id is required")
+        if not request.entries:
+            return omniagent_pb2.UpdateAgentScheduleResponse(success=False, message="entries are required")
+
+        normalized_entries = []
+        for entry in request.entries:
+            if entry.day not in VALID_DAYS:
+                return omniagent_pb2.UpdateAgentScheduleResponse(
+                    success=False, message=f"Invalid day: {entry.day}. Must be 0-6."
+                )
+            if not _is_valid_time(entry.start_time):
+                return omniagent_pb2.UpdateAgentScheduleResponse(
+                    success=False, message=f"Invalid start_time for day={entry.day}: {entry.start_time}"
+                )
+            if not _is_valid_time(entry.end_time):
+                return omniagent_pb2.UpdateAgentScheduleResponse(
+                    success=False, message=f"Invalid end_time for day={entry.day}: {entry.end_time}"
+                )
+            normalized_entries.append(
+                {
+                    "day": entry.day,
+                    "start_time": entry.start_time,
+                    "end_time": entry.end_time,
+                    "is_enabled": entry.is_enabled,
+                }
+            )
+
+        try:
+            with get_db_session() as db:
+                result = bulk_upsert_agent_schedule(
+                    db=db,
+                    user_id=request.user_id,
+                    entries=normalized_entries,
+                )
+                if result["status"] != "success":
+                    return omniagent_pb2.UpdateAgentScheduleResponse(
+                        success=False, message=result.get("message", "Failed to save schedule")
+                    )
+                return omniagent_pb2.UpdateAgentScheduleResponse(
+                    success=True, message=result.get("message", "Schedule saved")
+                )
+        except Exception as e:
+            logger.error(f"[UpdateAgentSchedule] error: {e}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return omniagent_pb2.UpdateAgentScheduleResponse(success=False, message=str(e))
+
+    def GetAgentSchedule(self, request: omniagent_pb2.GetAgentScheduleRequest, context):
+        logger.info(f"[GetAgentSchedule] user_id={request.user_id}")
+        if not request.user_id:
+            return omniagent_pb2.GetAgentScheduleResponse(found=False, entries=[])
+        try:
+            with get_db_session() as db:
+                result = get_agent_schedule(db, request.user_id)
+                if result["status"] != "success":
+                    return omniagent_pb2.GetAgentScheduleResponse(found=False, entries=[])
+
+                entries = [
+                    omniagent_pb2.ScheduleEntry(
+                        day=entry.day,
+                        start_time=entry.start_time,
+                        end_time=entry.end_time,
+                        is_enabled=entry.is_enabled,
+                    )
+                    for entry in result["entries"]
+                ]
+                return omniagent_pb2.GetAgentScheduleResponse(found=True, entries=entries)
+        except Exception as e:
+            logger.error(f"[GetAgentSchedule] error: {e}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return omniagent_pb2.GetAgentScheduleResponse(found=False, entries=[])
 
 def serve() -> grpc.Server:
     server = grpc.server(
