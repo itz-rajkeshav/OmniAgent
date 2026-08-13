@@ -16,7 +16,7 @@ import {
  */
 export async function handleIncomingMessage(sock, userId, jid, text) {
   if (!sock || !userId || !jid || !text?.trim()) return null;
-
+  // pulls data for redis
   try {
     const [history, toneId] = await Promise.all([
       getMessagesForConvo(userId, jid),
@@ -38,7 +38,7 @@ export async function handleIncomingMessage(sock, userId, jid, text) {
     const replyText = response.reply_text.trim();
 
     await sock.sendMessage(jid, { text: replyText });
-
+    // save its own bot reply to as a part of history next time
     await addMessage(userId, jid, {
       jid,
       fromMe: true,

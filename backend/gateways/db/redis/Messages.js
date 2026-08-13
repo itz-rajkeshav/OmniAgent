@@ -1,10 +1,10 @@
 import redisClient from "./redis.js";
 
-const KEY_PREFIX = "messages:";
-const JIDS_KEY_PREFIX = "message_jids:";
+const KEY_PREFIX = "messages:"; //list
+const JIDS_KEY_PREFIX = "message_jids:"; // set
 const AGENT_MODE_PREFIX = "agent_mode:";
 const AGENT_TONE_PREFIX = "agent_tone:";
-const BLOCKED_JIDS_PREFIX = "blocked_jids:";
+const BLOCKED_JIDS_PREFIX = "blocked_jids:"; //set
 const CONTACTS_PREFIX = "contacts:";
 const LAST_ACTIVITY_PREFIX = "last_activity:";
 
@@ -98,9 +98,9 @@ export async function addMessage(userId, jid, messageObj, source = "notify") {
   const value = JSON.stringify(messageObj);
   await redisClient.sadd(jidsK, jid);
   await redisClient.rpush(k, value);
-
+  //read current agent mode
   const mode = await getAgentMode(userId);
-
+  // based on mode it trims
   if (source === "notify") {
     if (mode === "casual") {
       const len = await redisClient.llen(k);
@@ -114,7 +114,7 @@ export async function addMessage(userId, jid, messageObj, source = "notify") {
     }
   }
 }
-
+// it parse each entry
 export async function getMessagesForConvo(userId, jid) {
   if (!userId || !jid) return [];
   const k = convoKey(userId, jid);
@@ -138,7 +138,7 @@ export async function getConversationContext(userId) {
   }
   return context;
 }
-
+// get all members in a conversatonal for that user id
 export async function getConversationJids(userId) {
   if (!userId) return [];
   return redisClient.smembers(jidsKey(userId));
@@ -179,6 +179,7 @@ function contactsKey(userId) {
 export async function upsertContacts(userId, contacts) {
   if (!userId || !Array.isArray(contacts) || contacts.length === 0) return;
   const key = contactsKey(userId);
+  // pipeline queue mutliple command and then send it to the redis server once and receive all responses in single batch
   const pipeline = redisClient.pipeline();
   for (const c of contacts) {
     const jid = c.id;
@@ -211,7 +212,8 @@ export async function getAllContacts(userId) {
 function lastActivityKey(userId) {
   return `${LAST_ACTIVITY_PREFIX}${userId}`;
 }
-
+// it is needed to fetch the rest messages like if reconnect then it fetch the new one bcz the olld one is existed with the timestapmps so it trips basically
+// only update if newer
 export async function updateLastActivity(userId, jid, rawTimestamp) {
   if (!userId || !jid) return;
   const ms = normalizeTimestampMs(rawTimestamp);

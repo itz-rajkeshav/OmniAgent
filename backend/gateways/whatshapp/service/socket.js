@@ -1,6 +1,7 @@
 import makeWASocket, {
   makeCacheableSignalKeyStore,
   DisconnectReason,
+  fetchLatestBaileysVersion,
 } from "@whiskeysockets/baileys";
 import { useMultiFileAuthState } from "@whiskeysockets/baileys";
 import QRCode from "qrcode";
@@ -176,9 +177,7 @@ export async function connectWhatsapp(userId, phoneNumber = null) {
 
   const sessionUserId = userId;
 
-  // Explicit WhatsApp Web version to avoid 405 "Method Not Allowed" when default is outdated.
-
-  const WHATSAPP_VERSION = [2, 3000, 1034014433];
+  const { version: WHATSAPP_VERSION } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
     version: WHATSAPP_VERSION,

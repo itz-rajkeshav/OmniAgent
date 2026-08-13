@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
+// proto-loader compiles .proto file
 const PROTO_PATH = path.join(__dirname, "../proto/messaging.proto");
 
 const AGENT_CORE_GRPC_ADDR =
@@ -20,12 +20,11 @@ const packageDef = protoLoader.loadSync(PROTO_PATH, {
 
 const proto = grpc.loadPackageDefinition(packageDef);
 const MessagingService = proto.omniagent.messaging.MessagingService;
-
+// buils js services
 const client = new MessagingService(
   AGENT_CORE_GRPC_ADDR,
   grpc.credentials.createInsecure(),
 );
-
 
 export function processMessage(
   userId,
@@ -34,6 +33,7 @@ export function processMessage(
   conversationHistory,
   toneId,
 ) {
+  // it shapes
   const history = (conversationHistory || []).map((m) => ({
     text: m.text || "",
     from_me: Boolean(m.fromMe),
